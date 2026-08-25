@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Idol Company — Roster Compare</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0910;
+    --bg-panel:#15131d;
+    --bg-panel-2:#1b1826;
+    --line:#2a2637;
+    --text:#f2eee6;
+    --text-dim:#9c96ac;
+    --text-faint:#6b6580;
+    --gold:#f5c518;
+    --gold-dim:#8a7420;
+    --rock:#e63950;
+    --rnb:#9b6bd9;
+    --pop:#ff4fa3;
+    --hiphop:#e8752c;
+    --edm:#2bd9c9;
+    --good:#4ade80;
+    --bad:#f87171;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(245,197,24,0.10), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 0%, rgba(155,107,217,0.09), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    line-height:1.5;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:36px 20px 80px;}
+
+  /* Header */
+  header{margin-bottom:32px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin:0 0 8px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .eyebrow::before{content:'';width:22px;height:1px;background:var(--gold-dim);display:inline-block;}
+  h1{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(40px,7vw,64px);
+    letter-spacing:0.01em;
+    margin:0 0 6px;
+    line-height:0.95;
+    background:linear-gradient(180deg,#fff, #cfc6e6 140%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .sub{color:var(--text-dim);font-size:15px;max-width:640px;margin:0;}
+  .meta{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    margin:0 0 14px;
+  }
+
+  .disclaimer-foot{
+    margin-top:56px;
+    max-width:640px;
+    margin-left:auto;margin-right:auto;
+    text-align:center;
+    font-size:12px;
+    color:var(--text-faint);
+    line-height:1.6;
+  }
+
+  /* Picker */
+  .picker{
+    margin-top:32px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    align-items:flex-start;
+  }
+  .slot{position:relative;flex:1 1 220px;min-width:200px;}
+  .slot input{
+    width:100%;
+    background:var(--bg-panel);
+    border:1.5px solid var(--line);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    padding:13px 14px;
+    border-radius:10px;
+    outline:none;
+    transition:border-color .15s;
+  }
+  .slot input:focus{border-color:var(--gold);}
+  .slot input::placeholder{color:var(--text-faint);}
+  .suggestions{
+    position:absolute;top:calc(100% + 6px);left:0;right:0;
+    background:var(--bg-panel-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    max-height:260px;overflow-y:auto;
+    z-index:20;
+    box-shadow:0 12px 30px rgba(0,0,0,0.5);
+    display:none;
+  }
+  .suggestions.show{display:block;}
+  .sugg-item{
+    padding:10px 14px;
+    cursor:pointer;
+    font-size:14px;
+    display:flex;justify-content:space-between;align-items:center;
+    border-bottom:1px solid var(--line);
+  }
+  .sugg-item:last-child{border-bottom:none;}
+  .sugg-item:hover{background:rgba(245,197,24,0.08);}
+  .sugg-item .g-tag{font-size:10px;font-family:'IBM Plex Mono',monospace;padding:2px 6px;border-radius:5px;text-transform:uppercase;letter-spacing:.04em;}
+
+  .picker-btns{display:flex;gap:10px;}
+  button.ghost{
+    background:transparent;
+    border:1.5px solid var(--line);
+    color:var(--text-dim);
+    padding:12px 16px;
+    border-radius:10px;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all .15s;
+    white-space:nowrap;
+  }
+  button.ghost:hover{border-color:var(--gold);color:var(--gold);}
+
+  /* Empty state */
+  .empty{
+    margin-top:60px;
+    text-align:center;
+    color:var(--text-faint);
+    padding:60px 20px;
+    border:1.5px dashed var(--line);
+    border-radius:var(--radius);
+    font-size:15px;
+  }
+  .empty b{color:var(--text-dim);}
+
+  /* Compare grid */
+  .compare-grid{
+    margin-top:36px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:16px;
+  }
+  .card{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:0;
+    overflow:hidden;
+    position:relative;
+    transition:box-shadow .2s, transform .2s;
+  }
+  .card.top-pick{
+    border-color:rgba(245,197,24,0.5);
+    box-shadow:0 0 0 1px rgba(245,197,24,0.25), 0 20px 60px -20px rgba(245,197,24,0.35);
+  }
+  .card.top-pick::before{
+    content:'';
+    position:absolute;top:-40%;left:50%;transform:translateX(-50%);
+    width:220px;height:220px;
+    background:radial-gradient(circle, rgba(245,197,24,0.28), transparent 65%);
+    pointer-events:none;
+  }
+  .card-top{height:5px;}
+  .card-body{padding:20px;}
+  .card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+  .card-remove{
+    background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:18px;line-height:1;padding:2px 6px;border-radius:6px;
+  }
+  .card-remove:hover{color:var(--bad);background:rgba(248,113,113,0.1);}
+  .name{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:28px;
+    letter-spacing:0.01em;
+    margin:0 0 4px;
+  }
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+  .tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    padding:3px 8px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    color:var(--text-dim);
+  }
+  .pick-badge{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:var(--bg);
+    background:var(--gold);
+    padding:4px 9px;
+    border-radius:6px;
+    font-weight:700;
+  }
+  .pick-badge.dominant{background:var(--good);}
+  .pick-badge.stat-lean{background:var(--gold);}
+  .pick-badge.skill-lean{background:var(--edm);color:var(--bg);}
+
+  .stat-row{margin-bottom:10px;}
+  .stat-label{
+    display:flex;justify-content:space-between;
+    font-size:12px;color:var(--text-dim);margin-bottom:4px;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .stat-label span:last-child{color:var(--text);}
+  .stat-bar-bg{height:7px;background:var(--bg-panel-2);border-radius:4px;overflow:hidden;border:1px solid var(--line);}
+  .stat-bar-fill{height:100%;border-radius:4px;}
+
+  .skill-list{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);}
+  .skill-list-title{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-faint);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;}
+  .skill-chip{
+    display:flex;justify-content:space-between;
+    font-size:13px;
+    padding:5px 0;
+    color:var(--text-dim);
+  }
+  .skill-chip span:last-child{color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12.5px;}
+  .no-skills{color:var(--text-faint);font-size:12.5px;font-style:italic;}
+
+  /* Recommendation */
+  .reco{
+    margin-top:28px;
+    background:linear-gradient(135deg, rgba(245,197,24,0.08), rgba(245,197,24,0.02));
+    border:1px solid rgba(245,197,24,0.35);
+    border-radius:var(--radius);
+    padding:22px 24px;
+  }
+  .reco-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+  .reco-main{font-family:'Bebas Neue',sans-serif;font-size:26px;margin:0 0 10px;letter-spacing:.01em;}
+  .reco-body{color:var(--text-dim);font-size:14px;line-height:1.6;}
+  .reco-body b{color:var(--text);}
+  .reco.dominant-reco{
+    background:linear-gradient(135deg, rgba(74,222,128,0.10), rgba(74,222,128,0.02));
+    border-color:rgba(74,222,128,0.4);
+  }
+  .reco.dominant-reco .reco-eyebrow{color:var(--good);}
+  .reco.tradeoff-reco{
+    background:linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+    border-color:var(--line);
+  }
+  .reco.tradeoff-reco .reco-eyebrow{color:var(--text-dim);}
+
+  /* Pros/Cons */
+  .pc-grid{
+    margin-top:28px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:16px;
+  }
+  .pc-card{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px 20px;
+  }
+  .pc-card h3{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:20px;font-weight:400;
+    margin:0 0 12px;letter-spacing:.01em;
+  }
+  .pc-list{list-style:none;margin:0;padding:0;}
+  .pc-list li{
+    font-size:13.5px;color:var(--text-dim);
+    padding:6px 0 6px 20px;
+    position:relative;
+  }
+  .pc-list li.pro::before{content:'▲';color:var(--good);position:absolute;left:0;font-size:9px;top:9px;}
+  .pc-list li.con::before{content:'▼';color:var(--bad);position:absolute;left:0;font-size:9px;top:9px;}
+
+  /* Roster browser */
+  .roster-section{margin-top:64px;}
+  .roster-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;}
+  .roster-title{font-family:'Bebas Neue',sans-serif;font-size:26px;margin:0;letter-spacing:.01em;}
+  .roster-controls{display:flex;gap:8px;flex-wrap:wrap;}
+  select, .roster-search{
+    background:var(--bg-panel);
+    border:1.5px solid var(--line);
+    color:var(--text);
+    padding:9px 12px;
+    border-radius:8px;
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    outline:none;
+  }
+  select:focus,.roster-search:focus{border-color:var(--gold);}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  thead th{
+    text-align:left;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--text-faint);
+    padding:10px 12px;
+    border-bottom:1px solid var(--line);
+    cursor:pointer;
+    user-select:none;
+    white-space:nowrap;
+  }
+  thead th:hover{color:var(--gold);}
+  tbody td{padding:10px 12px;border-bottom:1px solid rgba(42,38,55,0.5);color:var(--text-dim);}
+  tbody tr:hover{background:rgba(255,255,255,0.02);}
+  tbody td:first-child{color:var(--text);font-weight:600;}
+  .genre-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;}
+  .roster-add{
+    background:none;border:1px solid var(--line);color:var(--text-dim);
+    font-size:11px;padding:4px 9px;border-radius:6px;cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .roster-add:hover{border-color:var(--gold);color:var(--gold);}
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg-panel);}
+
+  footer{margin-top:60px;text-align:center;color:var(--text-faint);font-size:12px;}
+
+  @media (max-width:640px){
+    .wrap{padding:24px 14px 60px;}
+    .roster-head{flex-direction:column;align-items:flex-start;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Idol Company</p>
+    <h1>Every Girl. One Comparison.</h1>
+    <p class="meta">Creator: Dank · Server: 706</p>
+    <p class="sub">Pick two or more SSR girls to compare stats and skills side by side, and see who's the stronger upgrade.</p>
+  </header>
+
+  <div class="picker" id="picker"></div>
+  <div class="picker-btns" style="margin-top:12px;">
+    <button class="ghost" id="addSlotBtn">+ Add another girl</button>
+    <button class="ghost" id="clearBtn">Clear all</button>
+  </div>
+
+  <div id="emptyState" class="empty">
+    <b>No one selected yet.</b><br>Start typing a girl's name above to build your comparison.
+  </div>
+
+  <div id="compareGrid" class="compare-grid" style="display:none;"></div>
+  <div id="recoBox"></div>
+  <div id="pcGrid" class="pc-grid"></div>
+
+  <div class="roster-section">
+    <div class="roster-head">
+      <h2 class="roster-title">Full roster (<span id="rosterCount">0</span>)</h2>
+      <div class="roster-controls">
+        <input class="roster-search" id="rosterSearch" placeholder="Search name…">
+        <select id="genreFilter"><option value="">All genres</option></select>
+        <select id="typeFilter"><option value="">All types</option></select>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th data-key="name">Girl</th>
+            <th data-key="genre">Genre</th>
+            <th data-key="type">Type</th>
+            <th data-key="sing">Sing</th>
+            <th data-key="dance">Dance</th>
+            <th data-key="total">Total</th>
+            <th>Skill highlights</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="rosterBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <p class="disclaimer-foot">Note: rankings here use stats and skill bonuses, not a full battle simulator — the real PvP damage formula is still being worked out, so treat "upgrade priority" as an estimate.</p>
+
+  <footer>Built from your team's roster sheet · stat-based comparison, PvP simulator pending formula confirmation</footer>
+</div>
+
+<script>
+const GIRLS = [{"genre": "Rock", "type": "Vocalist", "name": "Vesper", "sing": 24600, "dance": 14100, "total": 38700, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Center", "name": "Yukine", "sing": 40042, "dance": 40042, "total": 80084, "skillDmgUp": null, "normalDmgUp": 0.9, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.18, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Vocalist", "name": "Momosaki", "sing": 44047, "dance": 22691, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Center", "name": "Sienna", "sing": 27808, "dance": 27808, "total": 55616, "skillDmgUp": 0.28, "normalDmgUp": 0.28, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Dancer", "name": "Valerie", "sing": 18345, "dance": 36691, "total": 55036, "skillDmgUp": 0.28, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Dancer", "name": "Keisha", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": 0.24, "normalDmgUp": 0.84, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Center", "name": "Hikari", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": 0.24, "normalDmgUp": 0.24, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Vocalist", "name": "Riku", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": 0.24, "normalDmgUp": 0.24, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Dancer", "name": "Antonia", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": 0.24, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Dancer", "name": "Vivienne", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": "240 /s"}, {"genre": "Rock", "type": "Center", "name": "Talia", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Dancer", "name": "Calliope", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Center", "name": "Mellissa", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Dancer", "name": "Yuuko", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Vocalist", "name": "Kelly", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Vocalist", "name": "Gabriella", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.4, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Center", "name": "Claire", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Vocalist", "name": "Skylar", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Dancer", "name": "Genevieve", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Dancer", "name": "Paisley", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Dancer", "name": "Shiori", "sing": 27229, "dance": 52855, "total": 80084, "skillDmgUp": null, "normalDmgUp": 0.9, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Vocalist", "name": "Rena", "sing": 44047, "dance": 22691, "total": 66738, "skillDmgUp": 0.32, "normalDmgUp": 0.32, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Center", "name": "Nephthys", "sing": 33369, "dance": 33369, "total": 66738, "skillDmgUp": 0.24, "normalDmgUp": 0.24, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.16, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Center", "name": "Ayane", "sing": 27808, "dance": 27808, "total": 55616, "skillDmgUp": null, "normalDmgUp": 0.7, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.14, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Dancer", "name": "Valentina", "sing": 18345, "dance": 36691, "total": 55036, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": 0.14, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Center", "name": "Dewi", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": 0.24, "normalDmgUp": 0.6, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Dancer", "name": "Cornelia", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": "240 /s"}, {"genre": "R&B", "type": "Dancer", "name": "Eri", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Vocalist", "name": "Sora", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Vocalist", "name": "Eirene", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Dancer", "name": "Raith", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Center", "name": "Noora", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Vocalist", "name": "Kesnia", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Dancer", "name": "Elizabeth", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": 0.7, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Vocalist", "name": "Marguerite", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Vocalist", "name": "Julia", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Dancer", "name": "Nova", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": "200 /s"}, {"genre": "R&B", "type": "Center", "name": "Zendaya", "sing": 9086, "dance": 15861, "total": 24947, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Vocalist", "name": "Layla", "sing": 44047, "dance": 22691, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Dancer", "name": "Hana", "sing": 22691, "dance": 44047, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Center", "name": "Sloane", "sing": 27808, "dance": 27808, "total": 55616, "skillDmgUp": 0.56, "normalDmgUp": 0.28, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Vocalist", "name": "Yumeno", "sing": 36691, "dance": 18345, "total": 55036, "skillDmgUp": 0.28, "normalDmgUp": 0.28, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Center", "name": "Monica", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": 0.6, "normalDmgUp": 0.6, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Center", "name": "Ella", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": 0.24, "normalDmgUp": 0.24, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Center", "name": "Octavia", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": "240 /s to Company HQ", "dmgDefending": null}, {"genre": "Pop", "type": "Vocalist", "name": "Restari", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": "240 /s"}, {"genre": "Pop", "type": "Center", "name": "Ruby", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.7, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Center", "name": "Chizuru", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Vocalist", "name": "Rosemary", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Center", "name": "Elawa", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Center", "name": "Ariadne", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Vocalist", "name": "Moana", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Center", "name": "Alexandra", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Center", "name": "Aurora", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Dancer", "name": "Anastasia", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Dancer", "name": "Savannah", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": "200 /s to Company HQ", "dmgDefending": null}, {"genre": "Pop", "type": "Vocalist", "name": "Brooklyn", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": "200 /s"}, {"genre": "HipHop", "type": "Vocalist", "name": "Rhea", "sing": 42400, "dance": 24300, "total": 66700, "skillDmgUp": 0.4, "normalDmgUp": 0.4, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.2, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Center", "name": "Arashi", "sing": 33369, "dance": 33369, "total": 66738, "skillDmgUp": 0.32, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Dancer", "name": "Elame", "sing": 22691, "dance": 44047, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.16, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Kendall", "sing": 36691, "dance": 18345, "total": 55036, "skillDmgUp": 0.28, "normalDmgUp": 0.28, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.14, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Dancer", "name": "Mio", "sing": 18345, "dance": 36691, "total": 55036, "skillDmgUp": null, "normalDmgUp": 0.7, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Claudius", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": 0.48, "normalDmgUp": 0.48, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Center", "name": "Haruki", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": null, "normalDmgUp": 0.6, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Marina", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": "240 /s to GC/Club/LM", "dmgDefending": null}, {"genre": "HipHop", "type": "Dancer", "name": "Ningsih", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": "240 /s to Company HQ", "dmgDefending": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Daphne", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Dancer", "name": "Leilani", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Center", "name": "Hestia", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Dancer", "name": "Megan", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Dancer", "name": "Elara", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Ayaka", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Josephine", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Center", "name": "Beatrice", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Bella", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Dancer", "name": "Avery", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Center", "name": "Audrey", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Vocalist", "name": "Aoi", "sing": 52855, "dance": 27229, "total": 80084, "skillDmgUp": 0.36, "normalDmgUp": 0.36, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Center", "name": "Mio", "sing": 33369, "dance": 33369, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.16, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Dancer", "name": "Momona", "sing": 22691, "dance": 44047, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.16, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Vocalist", "name": "Margot", "sing": 36691, "dance": 18345, "total": 55036, "skillDmgUp": 0.28, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.14, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Center", "name": "Longkui", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": 0.6, "normalDmgUp": 0.3, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Vocalist", "name": "Aurelia", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": 0.24, "normalDmgUp": 0.24, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Vocalist", "name": "Rin", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": 0.24, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Dancer", "name": "Miyuki", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": null, "normalDmgUp": 0.6, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Center", "name": "Flora", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Center", "name": "Kokoro", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Vocalist", "name": "Sari", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Center", "name": "Xenia", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Vocalist", "name": "Natasha", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Center", "name": "Cindy", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": 0.2, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Center", "name": "Anya", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": "200 /s to GC/Club/LM", "dmgDefending": null}, {"genre": "EDM", "type": "Vocalist", "name": "Alice", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Center", "name": "Everly", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": 0.2, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Center", "name": "Isadora", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Dancer", "name": "Caroline", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": "200 /s to GC/Club/LM", "dmgDefending": null}, {"genre": "Pop", "type": "Center", "name": "Diah", "sing": 40042, "dance": 40042, "total": 80084, "skillDmgUp": 0.36, "normalDmgUp": 0.9, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Kalani", "sing": 52855, "dance": 27229, "total": 80084, "skillDmgUp": null, "normalDmgUp": 0.9, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Dancer", "name": "Tanya", "sing": 27229, "dance": 52855, "total": 80084, "skillDmgUp": null, "normalDmgUp": 0.9, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.18, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}];
+
+const GENRE_COLOR = {
+  'Rock':'var(--rock)','R&B':'var(--rnb)','Pop':'var(--pop)','HipHop':'var(--hiphop)','EDM':'var(--edm)'
+};
+const SKILL_FIELDS = [
+  {key:'skillDmgUp', label:'Skill Dmg +', fmt:pct},
+  {key:'normalDmgUp', label:'Normal Dmg +', fmt:pct},
+  {key:'skillDmgReduce', label:'Skill Dmg Taken −', fmt:pct},
+  {key:'normalDmgReduce', label:'Normal Dmg Taken −', fmt:pct},
+  {key:'fanCapUp', label:'Fan Cap +', fmt:pct},
+  {key:'rallyCapUp', label:'Rally Cap +', fmt:pct},
+  {key:'dmgAttacking', label:'Dmg (Attacking)', fmt:raw},
+  {key:'dmgDefending', label:'Dmg (Defending)', fmt:raw},
+];
+
+function pct(v){ return (v*100).toFixed(0)+'%'; }
+function raw(v){ return String(v); }
+function has(v){ return v !== null && v !== undefined; }
+
+const MAX_SING = Math.max(...GIRLS.map(g=>g.sing));
+const MAX_DANCE = Math.max(...GIRLS.map(g=>g.dance));
+const MAX_TOTAL = Math.max(...GIRLS.map(g=>g.total));
+
+const FIELD_MAX = {
+  skillDmgUp: Math.max(...GIRLS.map(g=>g.skillDmgUp||0)),
+  normalDmgUp: Math.max(...GIRLS.map(g=>g.normalDmgUp||0)),
+  skillDmgReduce: Math.max(...GIRLS.map(g=>g.skillDmgReduce||0)),
+  normalDmgReduce: Math.max(...GIRLS.map(g=>g.normalDmgReduce||0)),
+};
+
+function offenseIndex(g){
+  return ((g.skillDmgUp||0)/FIELD_MAX.skillDmgUp)*0.65 + ((g.normalDmgUp||0)/FIELD_MAX.normalDmgUp)*0.35;
+}
+function defenseIndex(g){
+  return ((g.skillDmgReduce||0)/FIELD_MAX.skillDmgReduce)*0.5 + ((g.normalDmgReduce||0)/FIELD_MAX.normalDmgReduce)*0.5;
+}
+function versatility(g){
+  return SKILL_FIELDS.filter(f=>has(g[f.key])).length;
+}
+// Strict dominance: a dominates b if a is >= b on every stat/skill it has,
+// b has no skill a lacks, and a is strictly better on at least one thing.
+// This needs no formula — it's true regardless of how combat math works out.
+function dominance(a, b){
+  if(a.sing < b.sing || a.dance < b.dance) return null;
+  let strictlyBetter = a.sing > b.sing || a.dance > b.dance;
+  for(const f of SKILL_FIELDS){
+    const av = a[f.key], bv = b[f.key];
+    if(has(bv) && typeof bv === 'number'){
+      if(!has(av) || typeof av !== 'number' || av < bv) return null;
+      if(av > bv) strictlyBetter = true;
+    } else if(has(bv) && !has(av)){
+      return null; // b has a flat/text bonus a lacks entirely
+    }
+    if(has(av) && !has(bv)) strictlyBetter = true;
+  }
+  return strictlyBetter ? true : null;
+}
+function findDominated(g, others){
+  return others.filter(o=>dominance(g,o)===true);
+}
+
+// Two honest lenses instead of one blended "winner" score. How much raw stats
+// should matter vs. skill-damage % is exactly the part of the combat formula
+// that's still unsolved — so instead of guessing a blend, we check whether a
+// stat-first view and a skill-first view even agree before naming a top pick.
+// Stat-lean: raw Total dominates, skill % bonuses are a tiebreaker.
+// Skill-lean: skill/normal damage % bonuses dominate (this is what a big
+// Skill Damage % edge like Longkui's 60% shows up in), Total is a tiebreaker.
+function statLeanScore(g){
+  return (g.total/MAX_TOTAL)*0.75 + offenseIndex(g)*0.15 + defenseIndex(g)*0.10;
+}
+function skillLeanScore(g){
+  return (g.total/MAX_TOTAL)*0.10 + offenseIndex(g)*0.75 + defenseIndex(g)*0.15;
+}
+
+let slots = [null]; // array of girl objects or null
+
+const pickerEl = document.getElementById('picker');
+const emptyEl = document.getElementById('emptyState');
+const gridEl = document.getElementById('compareGrid');
+const recoEl = document.getElementById('recoBox');
+const pcEl = document.getElementById('pcGrid');
+
+function findGirl(name){
+  return GIRLS.find(g=>g.name.toLowerCase() === name.toLowerCase());
+}
+
+function renderPicker(){
+  pickerEl.innerHTML = '';
+  slots.forEach((g, i)=>{
+    const slot = document.createElement('div');
+    slot.className='slot';
+    const input = document.createElement('input');
+    input.placeholder = "Type a girl's name…";
+    input.value = g ? g.name : '';
+    input.dataset.idx = i;
+    input.autocomplete='off';
+    slot.appendChild(input);
+
+    const sugg = document.createElement('div');
+    sugg.className='suggestions';
+    slot.appendChild(sugg);
+
+    input.addEventListener('input', ()=>{
+      const q = input.value.trim().toLowerCase();
+      slots[i] = null;
+      if(!q){ sugg.classList.remove('show'); renderAll(); return; }
+      const matches = GIRLS.filter(x=>x.name.toLowerCase().includes(q)).slice(0,8);
+      sugg.innerHTML='';
+      matches.forEach(m=>{
+        const item = document.createElement('div');
+        item.className='sugg-item';
+        item.innerHTML = `<span>${m.name}</span><span class="g-tag" style="background:${GENRE_COLOR[m.genre]}22;color:${GENRE_COLOR[m.genre]};border:1px solid ${GENRE_COLOR[m.genre]}55;">${m.genre}</span>`;
+        item.addEventListener('mousedown', (e)=>{
+          e.preventDefault(); // stop input blur from firing first and cancelling the selection
+          slots[i]=m; input.value=m.name; sugg.classList.remove('show'); renderAll();
+        });
+        sugg.appendChild(item);
+      });
+      sugg.classList.toggle('show', matches.length>0);
+    });
+    input.addEventListener('blur', ()=> setTimeout(()=>sugg.classList.remove('show'), 150));
+    input.addEventListener('focus', ()=>{ if(input.value.trim()) input.dispatchEvent(new Event('input')); });
+
+    pickerEl.appendChild(slot);
+  });
+}
+
+document.getElementById('addSlotBtn').addEventListener('click', ()=>{
+  if(slots.length>=6) return;
+  slots.push(null); renderPicker();
+});
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  slots=[null]; renderPicker(); renderAll();
+});
+
+function statBar(label, value, max, color){
+  const w = Math.max(4, (value/max)*100);
+  return `<div class="stat-row">
+    <div class="stat-label"><span>${label}</span><span>${value.toLocaleString()}</span></div>
+    <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${w}%;background:${color};"></div></div>
+  </div>`;
+}
+
+function skillListHTML(g){
+  const present = SKILL_FIELDS.filter(f=>has(g[f.key]));
+  if(present.length===0) return `<div class="no-skills">No listed skill bonuses on this sheet.</div>`;
+  return present.map(f=>`<div class="skill-chip"><span>${f.label}</span><span>${f.fmt(g[f.key])}</span></div>`).join('');
+}
+
+function renderCompare(selected){
+  if(selected.length < 2){
+    gridEl.style.display='none';
+    recoEl.innerHTML='';
+    pcEl.innerHTML='';
+    emptyEl.style.display = selected.length===0 ? 'block':'block';
+    emptyEl.innerHTML = selected.length===0
+      ? "<b>No one selected yet.</b><br>Start typing a girl's name above to build your comparison."
+      : '<b>Add one more girl</b><br>Pick at least two to see a comparison.';
+    return;
+  }
+  emptyEl.style.display='none';
+  gridEl.style.display='grid';
+
+  const statTop = selected.slice().sort((a,b)=>statLeanScore(b)-statLeanScore(a))[0];
+  const skillTop = selected.slice().sort((a,b)=>skillLeanScore(b)-skillLeanScore(a))[0];
+  const dominantWinner = selected.find(g => selected.filter(x=>x!==g).every(o=>dominance(g,o)===true));
+  const lensesAgree = statTop === skillTop;
+  const top = dominantWinner || statTop; // fallback identity used only for badge fallback below
+
+  gridEl.innerHTML = selected.map(g=>{
+    const color = GENRE_COLOR[g.genre];
+    const dominated = findDominated(g, selected.filter(x=>x!==g));
+    let badge = '';
+    if(dominated.length) badge = '<span class="pick-badge dominant">Clear winner</span>';
+    else if(dominantWinner && g!==dominantWinner) badge = '';
+    else if(lensesAgree && g===statTop) badge = '<span class="pick-badge">Top pick</span>';
+    else if(!lensesAgree && g===statTop) badge = '<span class="pick-badge stat-lean">Leads on stats</span>';
+    else if(!lensesAgree && g===skillTop) badge = '<span class="pick-badge skill-lean">Leads on skill %</span>';
+    return `<div class="card ${(dominantWinner===g || (lensesAgree && g===statTop)) ? 'top-pick':''}">
+      <div class="card-top" style="background:${color};"></div>
+      <div class="card-body">
+        <div class="card-head">
+          <div>
+            <div class="name">${g.name}</div>
+            <div class="tags">
+              <span class="tag" style="color:${color};border-color:${color}55;">${g.genre}</span>
+              <span class="tag">${g.type}</span>
+            </div>
+          </div>
+          ${badge}
+        </div>
+        ${statBar('Sing', g.sing, MAX_SING, '#f5c518')}
+        ${statBar('Dance', g.dance, MAX_DANCE, '#2bd9c9')}
+        ${statBar('Total', g.total, MAX_TOTAL, color)}
+        <div class="skill-list">
+          <div class="skill-list-title">Skill bonuses</div>
+          ${skillListHTML(g)}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Recommendation: three honest tiers, not one fake-confident number
+  if(dominantWinner){
+    recoEl.innerHTML = `<div class="reco dominant-reco">
+        <div class="reco-eyebrow">Clear winner — no formula needed</div>
+        <div class="reco-main">${dominantWinner.name} strictly outclasses the rest</div>
+        <div class="reco-body">
+          <b>${dominantWinner.name}</b> matches or beats everyone else here on every stat and skill bonus, with no trade-offs going the other way. This isn't an estimate — it holds true regardless of how the exact PvP damage formula works out.
+        </div>
+      </div>`;
+  } else if(lensesAgree){
+    recoEl.innerHTML = `<div class="reco">
+        <div class="reco-eyebrow">Upgrade priority</div>
+        <div class="reco-main">${statTop.name} looks like the stronger pick</div>
+        <div class="reco-body">
+          <b>${statTop.name}</b> comes out ahead whether you weight raw stats or skill-damage bonuses more heavily — both views agree. Still a stat/skill estimate, not a simulated battle outcome.
+        </div>
+      </div>`;
+  } else {
+    recoEl.innerHTML = `<div class="reco tradeoff-reco">
+        <div class="reco-eyebrow">Genuine trade-off — depends what you value</div>
+        <div class="reco-main">${statTop.name} vs ${skillTop.name}: no clear winner yet</div>
+        <div class="reco-body">
+          <b>${statTop.name}</b> leads on raw stats (Sing/Dance/Total). <b>${skillTop.name}</b> leads on skill-damage % bonuses instead. Which one actually wins in PvP depends on how much a skill-damage bonus multiplies that big skill-pulse hit versus raw stat size — and that's exactly the part of the damage formula that's still unsolved. Until it's pinned down, this is a real judgment call, not something the site can safely settle for you.
+        </div>
+      </div>`;
+  }
+
+  // Pros/cons: compare each selected girl against the field
+  pcEl.innerHTML = selected.map(g=>{
+    const others = selected.filter(x=>x!==g);
+    const pros=[], cons=[];
+
+    const beats = findDominated(g, others);
+    beats.forEach(o=>pros.push(`Strictly better than ${o.name} — no trade-offs`));
+    const beatenBy = others.filter(o=>dominance(o,g)===true);
+    beatenBy.forEach(o=>cons.push(`Strictly outclassed by ${o.name}`));
+
+    if(g.sing === Math.max(...selected.map(x=>x.sing))) pros.push('Highest Sing (offense) in this comparison');
+    else if(g.sing === Math.min(...selected.map(x=>x.sing))) cons.push('Lowest Sing (offense) in this comparison');
+
+    if(g.dance === Math.max(...selected.map(x=>x.dance))) pros.push('Highest Dance (defense) in this comparison');
+    else if(g.dance === Math.min(...selected.map(x=>x.dance))) cons.push('Lowest Dance (defense) in this comparison');
+
+    if(g.total === Math.max(...selected.map(x=>x.total))) pros.push('Highest combined Total stat');
+    else if(g.total === Math.min(...selected.map(x=>x.total))) cons.push('Lowest combined Total stat');
+
+    const myVers = versatility(g);
+    const maxVers = Math.max(...selected.map(versatility));
+    if(myVers === maxVers && myVers>0) pros.push(`Widest skill kit (${myVers} distinct bonus types)`);
+    if(myVers === 0) cons.push('No listed skill bonuses on the sheet');
+
+    SKILL_FIELDS.forEach(f=>{
+      const mine = g[f.key];
+      if(!has(mine) || typeof mine !== 'number') return;
+      const othersHave = others.filter(o=>has(o[f.key]) && typeof o[f.key]==='number');
+      if(othersHave.length===0) { pros.push(`Only one here with ${f.label}`); return; }
+      const maxOther = Math.max(...othersHave.map(o=>o[f.key]));
+      if(mine > maxOther) pros.push(`Strongest ${f.label} (${f.fmt(mine)})`);
+    });
+
+    if(pros.length===0) pros.push('Solid, balanced stat line — no standout weaknesses');
+    if(cons.length===0) cons.push('No clear weak point in this comparison');
+
+    return `<div class="pc-card">
+      <h3>${g.name}</h3>
+      <ul class="pc-list">
+        ${pros.slice(0,5).map(p=>`<li class="pro">${p}</li>`).join('')}
+        ${cons.slice(0,3).map(c=>`<li class="con">${c}</li>`).join('')}
+      </ul>
+    </div>`;
+  }).join('');
+}
+
+function renderAll(){
+  const selected = slots.filter(Boolean);
+  renderCompare(selected);
+}
+
+// Roster browser
+const genreFilter = document.getElementById('genreFilter');
+const typeFilter = document.getElementById('typeFilter');
+const rosterSearch = document.getElementById('rosterSearch');
+const rosterBody = document.getElementById('rosterBody');
+const rosterCount = document.getElementById('rosterCount');
+
+[...new Set(GIRLS.map(g=>g.genre))].sort().forEach(g=>{
+  const opt=document.createElement('option'); opt.value=g; opt.textContent=g; genreFilter.appendChild(opt);
+});
+[...new Set(GIRLS.map(g=>g.type))].sort().forEach(t=>{
+  const opt=document.createElement('option'); opt.value=t; opt.textContent=t; typeFilter.appendChild(opt);
+});
+
+let sortKey='total', sortDir=-1;
+document.querySelectorAll('thead th[data-key]').forEach(th=>{
+  th.addEventListener('click', ()=>{
+    const k = th.dataset.key;
+    if(sortKey===k) sortDir*=-1; else { sortKey=k; sortDir=1; }
+    renderRoster();
+  });
+});
+
+function skillHighlight(g){
+  const present = SKILL_FIELDS.filter(f=>has(g[f.key]));
+  if(present.length===0) return '—';
+  return present.slice(0,2).map(f=>`${f.label} ${f.fmt(g[f.key])}`).join(', ') + (present.length>2 ? ` +${present.length-2} more` : '');
+}
+
+function renderRoster(){
+  const q = rosterSearch.value.trim().toLowerCase();
+  const gf = genreFilter.value, tf = typeFilter.value;
+  let rows = GIRLS.filter(g=>{
+    if(q && !g.name.toLowerCase().includes(q)) return false;
+    if(gf && g.genre!==gf) return false;
+    if(tf && g.type!==tf) return false;
+    return true;
+  });
+  rows.sort((a,b)=>{
+    const av=a[sortKey], bv=b[sortKey];
+    if(typeof av==='string') return av.localeCompare(bv)*sortDir;
+    return (av-bv)*sortDir;
+  });
+  rosterCount.textContent = rows.length;
+  rosterBody.innerHTML = rows.map(g=>`<tr>
+    <td>${g.name}</td>
+    <td><span class="genre-dot" style="background:${GENRE_COLOR[g.genre]};"></span>${g.genre}</td>
+    <td>${g.type}</td>
+    <td>${g.sing.toLocaleString()}</td>
+    <td>${g.dance.toLocaleString()}</td>
+    <td>${g.total.toLocaleString()}</td>
+    <td>${skillHighlight(g)}</td>
+    <td><button class="roster-add" data-name="${g.name}">+ compare</button></td>
+  </tr>`).join('');
+
+  rosterBody.querySelectorAll('.roster-add').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const name = btn.dataset.name;
+      const g = findGirl(name);
+      const emptyIdx = slots.findIndex(s=>!s);
+      if(emptyIdx>=0) slots[emptyIdx]=g;
+      else slots.push(g);
+      renderPicker(); renderAll();
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+  });
+}
+
+genreFilter.addEventListener('change', renderRoster);
+typeFilter.addEventListener('change', renderRoster);
+rosterSearch.addEventListener('input', renderRoster);
+
+renderPicker();
+renderAll();
+renderRoster();
+</script>
+</body>
+</html>

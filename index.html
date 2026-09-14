@@ -497,6 +497,52 @@
     padding:3px 7px;border-radius:5px;
   }
 
+  /* Collapsible explanation under each lineup */
+  .why{margin:0 0 12px;}
+  .why summary{
+    cursor:pointer;list-style:none;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--text-faint);
+    display:inline-flex;align-items:center;gap:6px;padding:2px 0;
+  }
+  .why summary::-webkit-details-marker{display:none;}
+  .why summary::before{content:'+';font-size:13px;line-height:1;}
+  .why[open] summary::before{content:'\2212';}
+  .why summary:hover{color:var(--gold);}
+  .why p{
+    margin:8px 0 0;font-size:13.5px;line-height:1.55;color:var(--text-dim);
+    border-left:2px solid var(--line);padding-left:12px;
+  }
+
+  /* Clickable girl name -> skill popover */
+  .girl-tag{cursor:pointer;user-select:none;}
+  .girl-tag:hover{filter:brightness(1.35);}
+  .girl-tag.open{background:rgba(255,255,255,0.10);}
+  #girlPop{
+    position:absolute;z-index:200;display:none;
+    min-width:220px;max-width:280px;
+    background:var(--bg-panel-2);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px 16px;
+    box-shadow:0 14px 40px rgba(0,0,0,0.65);
+  }
+  #girlPop .gp-name{
+    font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.01em;margin-bottom:2px;
+  }
+  #girlPop .gp-meta{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.05em;
+    text-transform:uppercase;color:var(--text-faint);margin-bottom:10px;
+  }
+  #girlPop .gp-row{
+    display:flex;justify-content:space-between;gap:14px;
+    font-size:13px;padding:5px 0;border-bottom:1px solid rgba(42,38,55,0.6);
+  }
+  #girlPop .gp-row:last-child{border-bottom:none;}
+  #girlPop .gp-row span:first-child{color:var(--text-dim);}
+  #girlPop .gp-row span:last-child{color:var(--text);font-family:'IBM Plex Mono',monospace;}
+  #girlPop .gp-none{font-size:12.5px;color:var(--text-faint);font-style:italic;}
+
   /* Stat primer on landing */
   .primer{
     margin-top:32px;
@@ -548,6 +594,11 @@
         <span class="menu-label">Build my team</span>
         <span class="menu-desc">Lineup suggestions from your unlocked girls</span>
       </button>
+      <button class="menu-card" data-target="harmonySection">
+        <span class="menu-icon">🎼</span>
+        <span class="menu-label">Harmony assistant</span>
+        <span class="menu-desc">Who to assign to whom, and what it costs</span>
+      </button>
       <button class="menu-card" data-target="peakSection">
         <span class="menu-icon">📈</span>
         <span class="menu-label">PEAK assistant</span>
@@ -575,8 +626,8 @@
     <p class="primer-title">What actually matters in a fight</p>
     <div class="primer-grid">
       <div><b>Fans</b> — your health bar. First side to lose 20% of their fans loses the battle.</div>
-      <div><b>Sing + Dance</b> — your raw power. This drives more of the outcome than anything else.</div>
-      <div><b>Normal Attack</b> — extra damage every second of the fight, so it always counts.</div>
+      <div><b>Sing + Dance</b> — your raw power, before any bonuses are applied.</div>
+      <div><b>Normal Attack</b> — extra damage every second of the fight.</div>
       <div><b>Skill Damage</b> — boosts a big burst hit that lands every 11 seconds.</div>
       <div><b>Reductions</b> — cut the damage coming back at you.</div>
       <div><b>Genre bonus</b> — 3 girls of one genre gives +15% stats, 4 gives +20%, 5 gives +25%.</div>
@@ -624,14 +675,14 @@
     <div class="roster-head">
       <h2 class="roster-title">Build my team</h2>
     </div>
-    <p class="sub" style="margin-bottom:16px;">Tell me who you've unlocked, and I'll suggest lineups for Parking Wars, P25, real PvP rallies, and a balanced all-rounder team — factoring in genre bonus stacking.</p>
+    <p class="sub" style="margin-bottom:16px;">Tell me who you've unlocked and I'll suggest lineups for each mode. They're built differently on purpose — short Parking and P25 fights reward raw stats and Normal Attack, while rallies and HQ fights run for minutes and reward Skill Damage and staying power. Each suggestion explains what it's for.</p>
 
     <div class="slot" style="max-width:420px;">
       <input id="tbSearch" placeholder="Search & add a girl you've unlocked…" autocomplete="off">
       <div class="suggestions" id="tbSuggestions"></div>
     </div>
     <div class="picker-btns" style="margin-top:10px;">
-      <button class="ghost" id="tbSelectAllBtn">Select all 99</button>
+      <button class="ghost" id="tbSelectAllBtn">Select all 90</button>
       <button class="ghost" id="tbClearBtn">Clear</button>
     </div>
 
@@ -642,6 +693,8 @@
       <select id="tbTableGenreFilter"><option value="">All genres</option></select>
       <button class="ghost" data-sort="name">Sort: Name</button>
       <button class="ghost" data-sort="genre">Sort: Genre</button>
+      <button class="ghost" id="tbSelectShownBtn">✓ Select all shown</button>
+      <button class="ghost" id="tbDeselectShownBtn">Deselect all shown</button>
     </div>
     <div id="tbTableBody" class="tb-multicol"></div>
 
@@ -662,6 +715,29 @@
     </div>
 
     <div id="tbResults" style="display:none;"></div>
+  </div>
+
+  <div class="roster-section page" id="harmonySection">
+    <button class="back-btn">← Back to menu</button>
+    <div class="roster-head">
+      <h2 class="roster-title">Harmony assistant</h2>
+    </div>
+    <p class="sub" style="margin-bottom:18px;">Harmony lets an abroad girl soak up extra Sing and Dance from other girls of her genre. It is expensive and the assistants are locked out of every other mode, so this only makes sense once you have girls spare. Uses the girls you ticked in <b>Build my team</b>.</p>
+
+    <div class="disclaimer" style="margin-bottom:18px;">
+      <b>Before you spend an SSR:</b> assign your decent R and SR girls first. They do nothing in a lineup anyway, so they cost you nothing — an SSR assistant costs you a team slot forever.
+    </div>
+
+    <div id="hmGenreQ">
+      <p class="menu-title" style="font-size:17px;">Which genre?</p>
+      <div class="picker-btns" id="hmGenreBtns" style="flex-wrap:wrap;margin-bottom:18px;"></div>
+    </div>
+
+    <p class="menu-title" style="font-size:17px;">Which team are you building around?</p>
+    <p class="lineup-note">Assistants are chosen to protect this lineup — the girls in it are never spent as fodder.</p>
+    <div class="picker-btns" id="hmTeamBtns" style="flex-wrap:wrap;margin-bottom:18px;"></div>
+
+    <div id="hmResults"></div>
   </div>
 
   <div class="roster-section page" id="peakSection">
@@ -688,9 +764,11 @@
     <div id="pkEntries" class="tb-chips"></div>
     <div id="pkCurrentBuffs" style="margin-top:16px;"></div>
 
-    <p class="menu-title" style="font-size:17px;margin-top:32px;">2. Which genres do you want to strengthen?</p>
-    <p class="lineup-note">Pick one for a focused main-genre push, or several to spread across teams.</p>
-    <div id="pkTargetGenres" class="picker-btns" style="flex-wrap:wrap;"></div>
+    <div id="pkTargetQ">
+      <p class="menu-title" style="font-size:17px;margin-top:32px;">2. Which genres do you want to strengthen?</p>
+      <p class="lineup-note">Pick one for a focused main-genre push, or several to spread across teams.</p>
+      <div id="pkTargetGenres" class="picker-btns" style="flex-wrap:wrap;"></div>
+    </div>
 
     <p class="menu-title" style="font-size:17px;margin-top:32px;">3. How many photos do you have to spend?</p>
     <div class="picker-btns" style="align-items:center;">
@@ -730,14 +808,18 @@
     </div>
   </div>
 
+  <div id="girlPop"></div>
+
   <div id="siteFooter" style="display:none;">
+    <p class="disclaimer-foot">Your unlocked girls and PEAK levels are saved in this browser, so you don't have to enter them again.
+      <button class="ghost" id="clearSavedBtn" style="font-size:12px;padding:5px 11px;margin-left:8px;">Clear saved data</button></p>
     <p class="disclaimer-foot">Note: rankings here use stats and skill bonuses, not a full battle simulator — the real PvP damage formula is still being worked out, so treat "upgrade priority" as an estimate.</p>
     <footer>Built from your team's roster sheet · stat-based comparison, PvP simulator pending formula confirmation</footer>
   </div>
 </div>
 
 <script>
-const GIRLS = [{"genre": "Rock", "type": "Vocalist", "name": "Vesper", "sing": 24600, "dance": 14100, "total": 38700, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Center", "name": "Yukine", "sing": 40042, "dance": 40042, "total": 80084, "skillDmgUp": null, "normalDmgUp": 0.9, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.18, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Vocalist", "name": "Momosaki", "sing": 44047, "dance": 22691, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Center", "name": "Sienna", "sing": 27808, "dance": 27808, "total": 55616, "skillDmgUp": 0.28, "normalDmgUp": 0.28, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Dancer", "name": "Valerie", "sing": 18345, "dance": 36691, "total": 55036, "skillDmgUp": 0.28, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Dancer", "name": "Keisha", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": 0.24, "normalDmgUp": 0.84, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Center", "name": "Hikari", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": 0.24, "normalDmgUp": 0.24, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Vocalist", "name": "Riku", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": 0.24, "normalDmgUp": 0.24, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Dancer", "name": "Antonia", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": 0.24, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Dancer", "name": "Vivienne", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": "240 /s"}, {"genre": "Rock", "type": "Center", "name": "Talia", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Dancer", "name": "Calliope", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Center", "name": "Mellissa", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Dancer", "name": "Yuuko", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Vocalist", "name": "Kelly", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Vocalist", "name": "Gabriella", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.4, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Center", "name": "Claire", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Vocalist", "name": "Skylar", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Dancer", "name": "Genevieve", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Dancer", "name": "Paisley", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Dancer", "name": "Shiori", "sing": 27229, "dance": 52855, "total": 80084, "skillDmgUp": null, "normalDmgUp": 0.9, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Vocalist", "name": "Rena", "sing": 44047, "dance": 22691, "total": 66738, "skillDmgUp": 0.32, "normalDmgUp": 0.32, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Center", "name": "Nephthys", "sing": 33369, "dance": 33369, "total": 66738, "skillDmgUp": 0.24, "normalDmgUp": 0.24, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.16, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Center", "name": "Ayane", "sing": 27808, "dance": 27808, "total": 55616, "skillDmgUp": null, "normalDmgUp": 0.7, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.14, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Dancer", "name": "Valentina", "sing": 18345, "dance": 36691, "total": 55036, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": 0.14, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Center", "name": "Dewi", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": 0.24, "normalDmgUp": 0.6, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Dancer", "name": "Cornelia", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": "240 /s"}, {"genre": "R&B", "type": "Dancer", "name": "Eri", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Vocalist", "name": "Sora", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Vocalist", "name": "Eirene", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Dancer", "name": "Raith", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Center", "name": "Noora", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Vocalist", "name": "Kesnia", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Dancer", "name": "Elizabeth", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": 0.7, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Vocalist", "name": "Marguerite", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Vocalist", "name": "Julia", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "R&B", "type": "Dancer", "name": "Nova", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": "200 /s"}, {"genre": "R&B", "type": "Center", "name": "Zendaya", "sing": 9086, "dance": 15861, "total": 24947, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Vocalist", "name": "Layla", "sing": 44047, "dance": 22691, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Dancer", "name": "Hana", "sing": 22691, "dance": 44047, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Center", "name": "Sloane", "sing": 27808, "dance": 27808, "total": 55616, "skillDmgUp": 0.56, "normalDmgUp": 0.28, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Vocalist", "name": "Yumeno", "sing": 36691, "dance": 18345, "total": 55036, "skillDmgUp": 0.28, "normalDmgUp": 0.28, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Center", "name": "Monica", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": 0.6, "normalDmgUp": 0.6, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Center", "name": "Ella", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": 0.24, "normalDmgUp": 0.24, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Center", "name": "Octavia", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": "240 /s to Company HQ", "dmgDefending": null}, {"genre": "Pop", "type": "Vocalist", "name": "Restari", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": "240 /s"}, {"genre": "Pop", "type": "Center", "name": "Ruby", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.7, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Center", "name": "Chizuru", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Vocalist", "name": "Rosemary", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Center", "name": "Elawa", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Center", "name": "Ariadne", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Vocalist", "name": "Moana", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Center", "name": "Alexandra", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Center", "name": "Aurora", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Dancer", "name": "Anastasia", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Pop", "type": "Dancer", "name": "Savannah", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": "200 /s to Company HQ", "dmgDefending": null}, {"genre": "Pop", "type": "Vocalist", "name": "Brooklyn", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": "200 /s"}, {"genre": "HipHop", "type": "Vocalist", "name": "Rhea", "sing": 42400, "dance": 24300, "total": 66700, "skillDmgUp": 0.4, "normalDmgUp": 0.4, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.2, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Center", "name": "Arashi", "sing": 33369, "dance": 33369, "total": 66738, "skillDmgUp": 0.32, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Dancer", "name": "Elame", "sing": 22691, "dance": 44047, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.16, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Kendall", "sing": 36691, "dance": 18345, "total": 55036, "skillDmgUp": 0.28, "normalDmgUp": 0.28, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.14, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Dancer", "name": "Mio", "sing": 18345, "dance": 36691, "total": 55036, "skillDmgUp": null, "normalDmgUp": 0.7, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Claudius", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": 0.48, "normalDmgUp": 0.48, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Center", "name": "Haruki", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": null, "normalDmgUp": 0.6, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Marina", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": "240 /s to GC/Club/LM", "dmgDefending": null}, {"genre": "HipHop", "type": "Dancer", "name": "Ningsih", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": "240 /s to Company HQ", "dmgDefending": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Daphne", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Dancer", "name": "Leilani", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Center", "name": "Hestia", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Dancer", "name": "Megan", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Dancer", "name": "Elara", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Ayaka", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Josephine", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Center", "name": "Beatrice", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Bella", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Dancer", "name": "Avery", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Center", "name": "Audrey", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Vocalist", "name": "Aoi", "sing": 52855, "dance": 27229, "total": 80084, "skillDmgUp": 0.36, "normalDmgUp": 0.36, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Center", "name": "Rio", "sing": 33369, "dance": 33369, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.16, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Dancer", "name": "Momona", "sing": 22691, "dance": 44047, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.16, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Vocalist", "name": "Margot", "sing": 36691, "dance": 18345, "total": 55036, "skillDmgUp": 0.28, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.14, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Center", "name": "Longkui", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": 0.6, "normalDmgUp": 0.3, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Vocalist", "name": "Aurelia", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": 0.24, "normalDmgUp": 0.24, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Vocalist", "name": "Rin", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": 0.24, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Dancer", "name": "Miyuki", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": null, "normalDmgUp": 0.6, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Center", "name": "Flora", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Center", "name": "Kokoro", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Vocalist", "name": "Sari", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Center", "name": "Xenia", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Vocalist", "name": "Natasha", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Center", "name": "Cindy", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": 0.2, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Center", "name": "Anya", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": "200 /s to GC/Club/LM", "dmgDefending": null}, {"genre": "EDM", "type": "Vocalist", "name": "Alice", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Center", "name": "Everly", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": 0.2, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Center", "name": "Isadora", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "EDM", "type": "Dancer", "name": "Caroline", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": "200 /s to GC/Club/LM", "dmgDefending": null}, {"genre": "Pop", "type": "Center", "name": "Diah", "sing": 40042, "dance": 40042, "total": 80084, "skillDmgUp": 0.36, "normalDmgUp": 0.9, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Kalani", "sing": 52855, "dance": 27229, "total": 80084, "skillDmgUp": null, "normalDmgUp": 0.9, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}, {"genre": "Rock", "type": "Dancer", "name": "Tanya", "sing": 27229, "dance": 52855, "total": 80084, "skillDmgUp": null, "normalDmgUp": 0.9, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.18, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null}];
+const GIRLS = [{"genre": "EDM", "type": "Vocalist", "name": "Alice", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "EDM", "type": "Center", "name": "Anya", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": "200 /s to GC/Club/LM", "dmgDefending": null, "map": "Anniversary", "season": null}, {"genre": "EDM", "type": "Vocalist", "name": "Aoi", "sing": 52855, "dance": 27229, "total": 80084, "skillDmgUp": 0.36, "normalDmgUp": 0.36, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 6}, {"genre": "EDM", "type": "Vocalist", "name": "Aurelia", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": 0.24, "normalDmgUp": 0.24, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 2}, {"genre": "EDM", "type": "Dancer", "name": "Caroline", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": "200 /s to GC/Club/LM", "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "EDM", "type": "Center", "name": "Cindy", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": 0.2, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "EDM", "type": "Center", "name": "Everly", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": 0.2, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "EDM", "type": "Center", "name": "Flora", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 3}, {"genre": "EDM", "type": "Center", "name": "Kokoro", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 1}, {"genre": "EDM", "type": "Center", "name": "Longkui", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": 0.6, "normalDmgUp": 0.3, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Stock Auction", "season": null}, {"genre": "EDM", "type": "Vocalist", "name": "Margot", "sing": 36691, "dance": 18345, "total": 55036, "skillDmgUp": 0.28, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.14, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 4}, {"genre": "EDM", "type": "Dancer", "name": "Miyuki", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": null, "normalDmgUp": 0.6, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 2}, {"genre": "EDM", "type": "Dancer", "name": "Momona", "sing": 22691, "dance": 44047, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.16, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 5}, {"genre": "EDM", "type": "Vocalist", "name": "Natasha", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "EDM", "type": "Vocalist", "name": "Rin", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": 0.24, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 3}, {"genre": "EDM", "type": "Center", "name": "Rio", "sing": 33369, "dance": 33369, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.16, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 5}, {"genre": "EDM", "type": "Vocalist", "name": "Sari", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 1}, {"genre": "EDM", "type": "Center", "name": "Xenia", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 1}, {"genre": "HipHop", "type": "Center", "name": "Arashi", "sing": 33369, "dance": 33369, "total": 66738, "skillDmgUp": 0.32, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 5}, {"genre": "HipHop", "type": "Center", "name": "Audrey", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "HipHop", "type": "Dancer", "name": "Avery", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Ayaka", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 1}, {"genre": "HipHop", "type": "Vocalist", "name": "Bella", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Claudius", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": 0.48, "normalDmgUp": 0.48, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 3}, {"genre": "HipHop", "type": "Vocalist", "name": "Daphne", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 1}, {"genre": "HipHop", "type": "Dancer", "name": "Elame", "sing": 22691, "dance": 44047, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.16, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 5}, {"genre": "HipHop", "type": "Dancer", "name": "Elara", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "HipHop", "type": "Center", "name": "Haruki", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": null, "normalDmgUp": 0.6, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 2}, {"genre": "HipHop", "type": "Center", "name": "Hestia", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Kalani", "sing": 52855, "dance": 27229, "total": 80084, "skillDmgUp": null, "normalDmgUp": 0.9, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 6}, {"genre": "HipHop", "type": "Vocalist", "name": "Kendall", "sing": 36691, "dance": 18345, "total": 55036, "skillDmgUp": 0.28, "normalDmgUp": 0.28, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.14, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 4}, {"genre": "HipHop", "type": "Dancer", "name": "Leilani", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 1}, {"genre": "HipHop", "type": "Vocalist", "name": "Marina", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": "240 /s to GC/Club/LM", "dmgDefending": null, "map": "Bali", "season": 3}, {"genre": "HipHop", "type": "Dancer", "name": "Megan", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "HipHop", "type": "Dancer", "name": "Mio", "sing": 18345, "dance": 36691, "total": 55036, "skillDmgUp": null, "normalDmgUp": 0.7, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 4}, {"genre": "HipHop", "type": "Dancer", "name": "Ningsih", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": "240 /s to Company HQ", "dmgDefending": null, "map": "Bali", "season": 2}, {"genre": "HipHop", "type": "Vocalist", "name": "Rhea", "sing": 42400, "dance": 24300, "total": 66700, "skillDmgUp": 0.4, "normalDmgUp": 0.4, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.2, "dmgAttacking": null, "dmgDefending": null, "map": "Stock Auction", "season": null}, {"genre": "Pop", "type": "Center", "name": "Ariadne", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 1}, {"genre": "Pop", "type": "Center", "name": "Aurora", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "Pop", "type": "Vocalist", "name": "Brooklyn", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": "200 /s", "map": "Burj", "season": null}, {"genre": "Pop", "type": "Center", "name": "Chizuru", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 1}, {"genre": "Pop", "type": "Center", "name": "Diah", "sing": 40042, "dance": 40042, "total": 80084, "skillDmgUp": 0.36, "normalDmgUp": 0.9, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 6}, {"genre": "Pop", "type": "Center", "name": "Elawa", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "Pop", "type": "Center", "name": "Isla", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": 0.24, "normalDmgUp": 0.24, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 3}, {"genre": "Pop", "type": "Dancer", "name": "Hana", "sing": 22691, "dance": 44047, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 5}, {"genre": "Pop", "type": "Vocalist", "name": "Layla", "sing": 44047, "dance": 22691, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 5}, {"genre": "Pop", "type": "Vocalist", "name": "Moana", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 1}, {"genre": "Pop", "type": "Center", "name": "Monica", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": 0.6, "normalDmgUp": 0.6, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Stock Auction", "season": null}, {"genre": "Pop", "type": "Center", "name": "Octavia", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": "240 /s to Company HQ", "dmgDefending": null, "map": "Rome", "season": 2}, {"genre": "Pop", "type": "Vocalist", "name": "Restari", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": "240 /s", "map": "Bali", "season": 2}, {"genre": "Pop", "type": "Vocalist", "name": "Rosemary", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "Pop", "type": "Center", "name": "Ruby", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.7, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "Pop", "type": "Dancer", "name": "Savannah", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": "200 /s to Company HQ", "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "Pop", "type": "Center", "name": "Sloane", "sing": 27808, "dance": 27808, "total": 55616, "skillDmgUp": 0.56, "normalDmgUp": 0.28, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 4}, {"genre": "Pop", "type": "Vocalist", "name": "Yumeno", "sing": 36691, "dance": 18345, "total": 55036, "skillDmgUp": 0.28, "normalDmgUp": 0.28, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 4}, {"genre": "R&B", "type": "Center", "name": "Ayane", "sing": 27808, "dance": 27808, "total": 55616, "skillDmgUp": null, "normalDmgUp": 0.7, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.14, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 4}, {"genre": "R&B", "type": "Dancer", "name": "Cornelia", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": "240 /s", "map": "Rome", "season": 2}, {"genre": "R&B", "type": "Center", "name": "Dewi", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": 0.24, "normalDmgUp": 0.6, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 2}, {"genre": "R&B", "type": "Vocalist", "name": "Eirene", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 1}, {"genre": "R&B", "type": "Dancer", "name": "Eri", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 1}, {"genre": "R&B", "type": "Vocalist", "name": "Julia", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "R&B", "type": "Vocalist", "name": "Kesnia", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "R&B", "type": "Center", "name": "Nephthys", "sing": 33369, "dance": 33369, "total": 66738, "skillDmgUp": 0.24, "normalDmgUp": 0.24, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.16, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 5}, {"genre": "R&B", "type": "Center", "name": "Nora", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "R&B", "type": "Dancer", "name": "Nova", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": "200 /s", "map": "Burj", "season": null}, {"genre": "R&B", "type": "Dancer", "name": "Ratih", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 1}, {"genre": "R&B", "type": "Vocalist", "name": "Rena", "sing": 44047, "dance": 22691, "total": 66738, "skillDmgUp": 0.32, "normalDmgUp": 0.32, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 5}, {"genre": "R&B", "type": "Dancer", "name": "Shiori", "sing": 27229, "dance": 52855, "total": 80084, "skillDmgUp": null, "normalDmgUp": 0.9, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 6}, {"genre": "R&B", "type": "Vocalist", "name": "Sora", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 1}, {"genre": "R&B", "type": "Dancer", "name": "Valentina", "sing": 18345, "dance": 36691, "total": 55036, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": 0.14, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 4}, {"genre": "R&B", "type": "Center", "name": "Zendaya", "sing": 9086, "dance": 15861, "total": 24947, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "Rock", "type": "Dancer", "name": "Antonia", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": 0.24, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 3}, {"genre": "Rock", "type": "Dancer", "name": "Calliope", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 1}, {"genre": "Rock", "type": "Center", "name": "Claire", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "Rock", "type": "Center", "name": "Hikari", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": 0.24, "normalDmgUp": 0.24, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 3}, {"genre": "Rock", "type": "Dancer", "name": "Keisha", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": 0.24, "normalDmgUp": 0.84, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Anniversary", "season": null}, {"genre": "Rock", "type": "Vocalist", "name": "Kelly", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "Rock", "type": "Center", "name": "Mellissa", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "Rock", "type": "Vocalist", "name": "Momosaki", "sing": 44047, "dance": 22691, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 5}, {"genre": "Rock", "type": "Dancer", "name": "Paisley", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "Rock", "type": "Vocalist", "name": "Riku", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": 0.24, "normalDmgUp": 0.24, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 2}, {"genre": "Rock", "type": "Center", "name": "Sienna", "sing": 27808, "dance": 27808, "total": 55616, "skillDmgUp": 0.28, "normalDmgUp": 0.28, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 4}, {"genre": "Rock", "type": "Vocalist", "name": "Skylar", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "Rock", "type": "Center", "name": "Talia", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 1}, {"genre": "Rock", "type": "Dancer", "name": "Tanya", "sing": 27229, "dance": 52855, "total": 80084, "skillDmgUp": null, "normalDmgUp": 0.9, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.18, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 6}, {"genre": "Rock", "type": "Dancer", "name": "Valerie", "sing": 18345, "dance": 36691, "total": 55036, "skillDmgUp": 0.28, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 4}, {"genre": "Rock", "type": "Vocalist", "name": "Vesper", "sing": 24600, "dance": 14100, "total": 38700, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "Rock", "type": "Dancer", "name": "Vivian", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": "240 /s", "map": "Bali", "season": 3}, {"genre": "Rock", "type": "Center", "name": "Yukine", "sing": 40042, "dance": 40042, "total": 80084, "skillDmgUp": null, "normalDmgUp": 0.9, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.18, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 6}, {"genre": "Rock", "type": "Dancer", "name": "Yuuko", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 1}];
 
 const GENRE_COLOR = {
   'Rock':'var(--rock)','R&B':'var(--rnb)','Pop':'var(--pop)','HipHop':'var(--hiphop)','EDM':'var(--edm)'
@@ -783,7 +865,7 @@ const PT_SHORT = {normalDmgUp:1.0, skillDmgUp:0.95, normalDmgReduce:0.5, skillDm
 // point of Skill Damage buys more than a point of Normal Attack once pulses
 // repeat. Skill Reduction matters more here too, since pulses are a big share
 // of incoming damage.
-const PT_LONG  = {normalDmgUp:1.0, skillDmgUp:1.3, normalDmgReduce:1.0, skillDmgReduce:0.9};
+const PT_LONG  = {normalDmgUp:1.0, skillDmgUp:1.6, normalDmgReduce:1.0, skillDmgReduce:0.9};
 
 function ptsWith(TBL, g, key){ return ((g[key]||0) * (TBL[key]||1)); }
 // Short-fight indices (parking / P25)
@@ -844,11 +926,18 @@ function findDominated(g, others){
 // lets you keep a 5-of-a-genre team is worth more than her stat line suggests.
 let mainGenre = null;
 
+// SKILL-FIRST WEIGHTING. Damage is roughly TeamStats x (1 + bonuses), and a
+// real team total (after upgrades and PEAK) is in the millions while a girl's
+// base stats are tens of thousands. Working through the marginal value, 1pp of
+// a damage bonus is worth ~10,000-50,000 base stat points depending on account
+// size — so skills must outweigh raw stats by an order of magnitude. The stat
+// term is kept small but non-zero so it still breaks ties and carries a little
+// signal for very small accounts.
 function baseStrength(g){
-  return (g.total/MAX_TOTAL)*0.55
-       + offenseIndex(g)*0.30
-       + defenseIndex(g)*0.20
-       + ((g.fanCapUp||0))*0.15;
+  return (g.total/MAX_TOTAL)*0.15
+       + offenseIndex(g)*1.00
+       + defenseIndex(g)*0.60
+       + ((g.fanCapUp||0))*0.30;
 }
 // Genre bonus is worth ~25% of team stats, so fitting your main genre is a
 // large effective boost — weighted here to be meaningful but not absolute.
@@ -857,11 +946,14 @@ function synergyBonus(g){
 }
 function rankScore(g){ return baseStrength(g) * (1 + synergyBonus(g)); }
 
+// Two lenses for the compare tab: one that leans on raw stats, one that leans
+// on skills. Both are skill-first now; they differ only in how much stat
+// signal they carry, which is what surfaces a genuine trade-off to the user.
 function statLeanScore(g){
-  return (g.total/MAX_TOTAL)*0.75 + offenseIndex(g)*0.15 + defenseIndex(g)*0.10;
+  return (g.total/MAX_TOTAL)*0.45 + offenseIndex(g)*1.00 + defenseIndex(g)*0.60;
 }
 function skillLeanScore(g){
-  return (g.total/MAX_TOTAL)*0.10 + offenseIndex(g)*0.75 + defenseIndex(g)*0.15;
+  return (g.total/MAX_TOTAL)*0.05 + offenseIndex(g)*1.20 + defenseIndex(g)*0.70;
 }
 
 let slots = [null]; // array of girl objects or null
@@ -1215,10 +1307,21 @@ rosterSearch.addEventListener('input', renderRoster);
 // Page navigation (landing menu <-> individual pages)
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('landingMenu').style.display='none';
-  document.querySelector('.primer').style.display='none';
-  document.getElementById(id).classList.add('active');
-  document.getElementById('siteFooter').style.display='block';
+  const menu = document.getElementById('landingMenu');
+  if(menu) menu.style.display='none';
+  const primer = document.querySelector('.primer');
+  if(primer) primer.style.display='none';
+  const page = document.getElementById(id);
+  if(page) page.classList.add('active');
+  const foot = document.getElementById('siteFooter');
+  if(foot) foot.style.display='block';
+  // Re-render on entry so a tab never shows stale or empty content because it
+  // was last drawn before the user picked their girls.
+  try{
+    if(id==='peakSection') renderPeak();
+    if(id==='harmonySection') renderHarmony();
+    if(id==='teamBuilderSection'){ renderChips(); renderTbTable(); renderTeamBuilder(); }
+  }catch(e){ console.error('render on open failed', e); }
   window.scrollTo({top:0});
 }
 function showLanding(){
@@ -1309,17 +1412,39 @@ function makeScorer(statFn, skillFn){
 // cap bonus and nothing else shouldn't automatically outscore a girl with
 // real Skill/Normal Attack bonuses just because fan cap fills more of its
 // (smaller) share of the score.
+// PARKING / P25 — its own formula, not a tweak of the PvP one.
+//
+// You lose when you lose 20% of YOUR OWN fans, so:
+//   my time-to-lose    = 0.20*myFans / theirDPS
+//   their time-to-lose = 0.20*theirFans / myDPS
+// I win when myFans*myDPS > theirFans*theirDPS. Fans and damage MULTIPLY,
+// which means 1pp of Fan Cap is worth exactly 1pp of a damage bonus here —
+// the same weight as Normal Attack, not half of it.
+//
+// Skill Damage is discounted (0.95 per point, fitted to 37 real parking
+// reports) because these fights are short and the burst often never fires.
+// Rally Capacity is worth nothing: it sizes a rally bus, not a parking car.
 const parkingScorer = makeScorer(
-  g => (g.total/MAX_TOTAL)*0.55,
-  g => ((g.fanCapUp||0))*0.40 + offenseShort(g)*0.25 + defenseShort(g)*0.10
+  g => (g.total/MAX_TOTAL)*0.20,
+  g => ((g.fanCapUp||0))*1.00 + offenseShort(g)*1.00 + defenseShort(g)*0.50
 );
+// Short fights: the tick stream governs most of the outcome because the burst
+// often never fires. Fan Cap at full value (fans x damage multiply here).
+parkingScorer.params = { c:0.25, fanW:1.00, statW:1.00, tol:0.04 };
 // For "getting attacked, hit back as hard as possible" — no rally cap (not
 // relevant on defense) and no defense weighting (the goal here is damage out,
 // not damage avoided).
+// HQ defence: the pool is fixed by game rules (20M or your inventory, plus 12M
+// from teammates), so Fan Cap and Rally Cap do nothing. Judge on combat skills
+// only. Reductions count — these fights run long — but a girl with reductions
+// and no damage is a dead slot, so offense is weighted well above defense.
 const maxDamageScorer = makeScorer(
-  g => (g.total/MAX_TOTAL)*0.25,
-  g => offenseLong(g)*0.75
+  g => (g.total/MAX_TOTAL)*0.12,
+  g => offenseLong(g)*1.20 + defenseLong(g)*0.55
 );
+// HQ defence: long fight, so the burst lands many times. Fan Cap does nothing
+// (your pool is set by game rules, not your girls).
+maxDamageScorer.params = { c:1.50, fanW:0.00, statW:1.00, tol:0.08 };
 // Rally/siege fights run for minutes, so BOTH damage sources fire many times:
 // normal attack ticks every second, skill pulses land every ~11s. offenseIndex
 // already counts both on the common scale, so it is reused rather than
@@ -1328,9 +1453,12 @@ const maxDamageScorer = makeScorer(
 // handled separately as a slot count, not a score term, since it multiplies the
 // whole group's fan pool rather than this girl's own contribution.
 const rallyScorer = makeScorer(
-  g => (g.total/MAX_TOTAL)*0.35,
-  g => offenseLong(g)*0.45 + defenseLong(g)*0.20
+  g => (g.total/MAX_TOTAL)*0.12,
+  g => offenseLong(g)*1.10 + defenseLong(g)*0.65
 );
+// Rally/siege: minutes long, 10-30 bursts land, so the skill axis carries as
+// much as the tick axis. Fan Cap irrelevant — bus size comes from Rally Cap.
+rallyScorer.params = { c:1.50, fanW:0.00, statW:1.00, tol:0.08 };
 function hasRallyCap(g){ return typeof g.rallyCapUp==='number' && g.rallyCapUp>0; }
 
 function buildCandidate(team){
@@ -1345,27 +1473,154 @@ function buildCandidate(team){
 // genre with 5+ unlocked girls first, then 4, then 3, only falling back to a
 // mixed top-5 (no bonus) if nothing qualifies. The +25%/+20%/+15% bonus is too
 // big to leave on the table, so depth is checked before raw score.
+// ---- Team scoring: two separate axes, with diminishing returns ----
+//
+// Normal Attack and Skill Damage are DIFFERENT mechanics and must never be
+// added together. Normal attack bonus and normal-attack reduction both act on
+// the per-second tick stream, so they share one axis. Skill damage bonus and
+// skill reduction both act on the ~11s burst, so they share the other.
+//
+// Damage over a burst cycle is roughly:
+//   10 ticks x stats x (1 + normalAxis)  +  1 burst x stats x k x (1 + skillAxis)
+// so the two axes multiply rather than add, and each is kept strictly separate.
+// two are kept strictly separate. Fan Cap is a MULTIPLIER on the whole team
+// rather than an axis, because in parking you win when
+// myFans x myDamage > theirFans x theirDamage — fans and damage multiply.
+function normalAxis(g){ return (g.normalDmgUp||0) + (g.normalDmgReduce||0); }
+function skillAxis(g){  return (g.skillDmgUp||0)  + (g.skillDmgReduce||0);  }
+
+// Team value.
+//
+// Three things this gets right that earlier versions did not.
+//
+// 1. BASE STATS ARE PROPORTIONAL. A team's real total is built FROM the girls
+//    you field, scaled up by upgrades and PEAK — it is not a big fixed account
+//    pool that the girls add a sliver to. So a girl with twice the base stats
+//    contributes twice as much at any investment level, and swapping a 66k girl
+//    for a 32k one costs ~15% of the team's stats whether you are new or a
+//    whale. (An earlier version treated stats as a small addition to a 3M base,
+//    which made them near-irrelevant and let low-stat girls in on skills alone.)
+//
+// 2. THE TWO DAMAGE SOURCES MULTIPLY. From the per-second log, over one 11s
+//    cycle you land 10 ticks and one burst, and burst = tick x (1.14 + 10.26 x
+//    skillBonus). So output ~ (1 + normalAttack) x (1 + c x skillDamage).
+//
+// 3. REDUCTIONS ARE SURVIVABILITY, NOT OUTPUT. Cutting incoming damage buys
+//    time, which is a separate multiplier — not something added to your own
+//    damage.
+//
+// 4. SKILL REDUCTION BEATS NORMAL REDUCTION. burst/tick = 1.14 + 10.26 x the
+//    attacker's skill bonus. Real opponents in the battle reports run 134-176%
+//    skill damage, which makes their burst 13-20x a single tick — so the burst
+//    is 60-65% of the damage landing on you, and skill reduction blunts the
+//    bigger half. (An earlier version had this backwards at 70/30 because it
+//    was calibrated on one log whose defender had only 24% skill bonus.)
+//
+// 5. MORE WORKING SKILLS BEATS BIGGER NUMBERS. A girl covering three of the
+//    four combat stats is worth more than her raw totals suggest, because each
+//    skill pays off in a different situation and the model's weights are
+//    uncertain. A small explicit bonus per distinct working skill encodes that
+//    rather than leaving it to luck.
+// Stats enter proportionally, normalised so the term sits near 1 for a strong
+// five-girl team. statW lets a mode dial how much raw stats matter.
+const STAT_REF = 300000;        // a solid 5-girl base-stat total
+const RED_NORMAL_SHARE = 0.35;  // ticks are the smaller share of incoming damage
+const RED_SKILL_SHARE  = 0.65;  // bursts are the bigger share vs real opponents
+// A "working skill" is one that does something IN THIS MODE. Fan Cap counts in
+// parking — the win condition there is myFans x myDamage, so a bigger pool is
+// worth the same as more damage — but not in rally or HQ defence, where the
+// pool is set by rally capacity or by game rules instead.
+function workingSkills(g, countFan){
+  return ((g.normalDmgUp||0)>0) + ((g.skillDmgUp||0)>0)
+       + ((g.normalDmgReduce||0)>0) + ((g.skillDmgReduce||0)>0)
+       + (countFan ? ((g.fanCapUp||0)>0 ? 1 : 0) : 0);
+}
+function teamValue(team, mult, c, fanW, statW){
+  const stats = team.reduce((s,g)=>s+g.total,0) * mult;
+  const nAtk  = team.reduce((s,g)=>s+(g.normalDmgUp||0),0);
+  const sDmg  = team.reduce((s,g)=>s+(g.skillDmgUp||0),0);
+  const nRed  = team.reduce((s,g)=>s+(g.normalDmgReduce||0),0);
+  const sRed  = team.reduce((s,g)=>s+(g.skillDmgReduce||0),0);
+  const fan   = team.reduce((s,g)=>s+(g.fanCapUp||0),0);
+  const skillCount = team.reduce((s,g)=>s+workingSkills(g, fanW>0),0);
+  const statTerm = Math.pow(stats/STAT_REF, statW);
+  const offense  = (1 + nAtk) * (1 + c*sDmg);
+  const survive  = 1 / (1 - Math.min(0.75, RED_NORMAL_SHARE*nRed + RED_SKILL_SHARE*sRed));
+  const coverage = 1 + 0.02*skillCount;   // rewards girls who do several things
+  return statTerm * offense * survive * coverage * (1 + fan*fanW);
+}
+
+// Exhaustive best-five search with an explicit SKILL-DAMAGE TIEBREAK.
+//
+// Two lessons baked in here.
+//
+// 1. Greedy selection (one girl at a time) gets stuck — an early pick that
+//    looks strong alone blocks a better combination. A genre holds at most ~21
+//    girls, so every combination is checked instead.
+//
+// 2. The burst-size coefficient comes from a SINGLE per-second battle log, so
+//    the damage model's error bars are wide. Repeatedly, the top-scoring team
+//    was only 2-5% ahead of a team carrying 20-28 more points of Skill Damage
+//    — a bad bet, because Skill Damage is exactly the component the model is
+//    least sure about, and the one that compounds over a long fight.
+//
+//    So: among all teams within `tol` of the best modelled damage, take the one
+//    with the most Skill Damage. Near-equal on what we can measure, better on
+//    what we can't. This is self-correcting — it holds for every genre and
+//    mode without per-genre tuning.
+function bestFive(list, p){
+  if(list.length < 5) return list.slice();
+  let cands = list;
+  if(cands.length > 16){
+    cands = cands.slice().sort((a,b)=>
+      teamValue([b],1,p.c,p.fanW,p.statW) - teamValue([a],1,p.c,p.fanW,p.statW)
+    ).slice(0,16);
+  }
+  const n = cands.length, teams = [];
+  for(let a=0;a<n-4;a++)
+   for(let b=a+1;b<n-3;b++)
+    for(let d=b+1;d<n-2;d++)
+     for(let e=d+1;e<n-1;e++)
+      for(let f=e+1;f<n;f++){
+        const t = [cands[a],cands[b],cands[d],cands[e],cands[f]];
+        teams.push({ t, v: teamValue(t,1,p.c,p.fanW,p.statW),
+                     sd: t.reduce((s,g)=>s+(g.skillDmgUp||0),0),
+                     sk: t.reduce((s,g)=>s+workingSkills(g, p.fanW>0),0) });
+      }
+  if(!teams.length) return cands.slice(0,5);
+  const topV = Math.max(...teams.map(x=>x.v));
+  const tol = (p.tol != null) ? p.tol : 0.06;
+  const near = teams.filter(x=>x.v >= topV*(1-tol));
+  // Among near-equal teams, prefer COVERAGE first (total working skills across
+  // the five), then Skill Damage, then raw value. Coverage comes first because
+  // sorting on Skill Damage alone will happily swap a two-skill girl for a
+  // one-skill girl who happens to carry a bigger Skill Damage number — which
+  // is how a pure-Skill-Damage girl with no Normal Attack kept getting in.
+  near.sort((a,b)=> (b.sk - a.sk) || (b.sd - a.sd) || (b.v - a.v));
+  return near[0].t;
+}
+
 function bestLineup(pool, scorer){
   if(pool.length < 5) return null;
+  const p = scorer.params;
   const byGenre = {};
   pool.forEach(g=>{ (byGenre[g.genre]=byGenre[g.genre]||[]).push(g); });
+  // Always take the deepest genre stack available — the bonus is too big to skip.
   for(const k of [5,4,3]){
     let bestAtK = null, bestValAtK = -Infinity;
     Object.values(byGenre).forEach(list=>{
       if(list.length < k) return;
-      const genreSorted = list.slice().sort((a,b)=>scorer.full(b)-scorer.full(a));
-      const core = genreSorted.slice(0,k);
+      const core = bestFive(list, p).slice(0,k);
       const coreNames = new Set(core.map(g=>g.name));
-      const others = pool.filter(g=>!coreNames.has(g.name)).sort((a,b)=>scorer.full(b)-scorer.full(a)).slice(0,5-k);
+      const others = bestFive(pool.filter(g=>!coreNames.has(g.name)), p).slice(0,5-k);
       if(core.length + others.length !== 5) return;
       const candidate = buildCandidate(core.concat(others));
-      const val = candidate.team.reduce((s,g)=>s+scorer.stat(g),0) * candidate.mult + candidate.team.reduce((s,g)=>s+scorer.skill(g),0);
+      const val = teamValue(candidate.team, candidate.mult, p.c, p.fanW, p.statW);
       if(val > bestValAtK){ bestValAtK = val; bestAtK = candidate; }
     });
     if(bestAtK) return bestAtK;
   }
-  const sortedAll = pool.slice().sort((a,b)=>scorer.full(b)-scorer.full(a));
-  return buildCandidate(sortedAll.slice(0,5));
+  return buildCandidate(bestFive(pool, p));
 }
 
 // Builds up to 5 distinct P25 teams (a full squad) by repeatedly taking the
@@ -1401,9 +1656,9 @@ function detectMainGenre(pool){
 function buildRallyTeam(pool, genre, capCount, maxMode){
   const inGenre = pool.filter(g=>g.genre===genre);
   if(inGenre.length < 5) return null;
-  const byScore = inGenre.slice().sort((a,b)=>rallyScorer.full(b)-rallyScorer.full(a));
-  // Start from the pure-damage best five, then try substituting cap girls in.
-  let team = byScore.slice(0,5);
+  // Start from the best damage five (team-aware, so the axes stay balanced),
+  // then try substituting cap girls in.
+  let team = bestFive(inGenre, rallyScorer.params);
   // Order cap girls by capacity, then by how much they still contribute in a
   // long fight. A cap girl with real attack skills is always tried before one
   // whose only contribution is the capacity itself.
@@ -1450,6 +1705,37 @@ function countRallyCapInGenre(pool, genre){
   return pool.filter(g=>g.genre===genre && hasRallyCap(g)).length;
 }
 
+// ---- Saved settings ----
+// Remembers your unlocked girls and PEAK levels in this browser so you don't
+// have to re-enter them every visit. Wrapped in try/catch because some
+// browsers (private mode, embedded frames) block storage entirely — if that
+// happens the site still works, it just won't remember between visits.
+const SAVE_KEY = 'idolCompanyAssistant.v1';
+let saveReady = false;   // set true once initial load is done, so we don't
+                         // save over good data while still restoring it
+function saveState(){
+  if(!saveReady) return;
+  try{
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      unlocked: [...unlocked],
+      rallyLeaderAnswer, rallyGenre, parkingWarsAnswer, harmonyGenre, harmonyTeamId, harmonyGenre,
+      peakGirls,
+      pkTargets: [...pkTargets],
+      pkBudget: (document.getElementById('pkBudget')||{}).value || '',
+    }));
+  }catch(e){ /* storage unavailable — carry on without saving */ }
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return null;
+    return JSON.parse(raw);
+  }catch(e){ return null; }
+}
+function clearState(){
+  try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
+}
+
 let unlocked = new Set();
 let rallyLeaderAnswer = null;
 let rallyGenre = null;   // user-chosen main genre for rally lineups
@@ -1461,7 +1747,7 @@ const tbEmpty = document.getElementById('tbEmpty');
 const tbResults = document.getElementById('tbResults');
 const rallyLeaderQ = document.getElementById('rallyLeaderQ');
 
-function syncAll(){ renderChips(); renderTbTable(); renderTeamBuilder(); }
+function syncAll(){ renderChips(); renderTbTable(); renderTeamBuilder(); renderHarmony(); renderPeak(); saveState(); }
 
 function renderChips(){
   tbChips.innerHTML = [...unlocked].sort().map(name=>`
@@ -1520,6 +1806,20 @@ document.querySelectorAll('#teamBuilderSection button[data-sort]').forEach(btn=>
   });
 });
 tbTableGenreFilter.addEventListener('change', renderTbTable);
+// Bulk select/deselect everything currently visible under the genre filter, so
+// you can grab a whole genre in one click instead of ticking 20 boxes.
+function tbShownGirls(){
+  const gf = tbTableGenreFilter.value;
+  return GIRLS.filter(g=> !gf || g.genre===gf);
+}
+document.getElementById('tbSelectShownBtn').addEventListener('click', ()=>{
+  tbShownGirls().forEach(g=>unlocked.add(g.name));
+  syncAll();
+});
+document.getElementById('tbDeselectShownBtn').addEventListener('click', ()=>{
+  tbShownGirls().forEach(g=>unlocked.delete(g.name));
+  syncAll();
+});
 
 function renderTbTable(){
   const gf = tbTableGenreFilter.value;
@@ -1536,22 +1836,28 @@ function renderTbTable(){
   document.getElementById('tbTableBody').querySelectorAll('input[type=checkbox]').forEach(cb=>{
     cb.addEventListener('change', ()=>{
       if(cb.checked) unlocked.add(cb.dataset.name); else unlocked.delete(cb.dataset.name);
-      renderChips(); renderTeamBuilder();
+      syncAll();
     });
   });
 }
 
-document.getElementById('rlYesBtn').addEventListener('click', ()=>{ rallyLeaderAnswer=true; renderTeamBuilder(); });
+document.getElementById('rlYesBtn').addEventListener('click', ()=>{ rallyLeaderAnswer=true; renderTeamBuilder(); saveState(); });
 function renderRallyGenreBtns(pool){
   const wrap=document.getElementById('rlGenreWrap');
-  if(rallyLeaderAnswer!==true){ wrap.style.display='none'; return; }
-  wrap.style.display='block';
   const genres=[...new Set(pool.map(g=>g.genre))].filter(gn=>pool.filter(x=>x.genre===gn).length>=5).sort();
+  // Only worth asking when there is an actual choice — if only one genre can
+  // field five girls, that is obviously the main team.
+  if(rallyLeaderAnswer!==true || genres.length<2){
+    wrap.style.display='none';
+    if(genres.length===1) rallyGenre = genres[0];
+    return;
+  }
+  wrap.style.display='block';
   const btns=document.getElementById('rlGenreBtns');
   btns.innerHTML=genres.map(gn=>`<button class="ghost" data-genre="${gn}" style="${rallyGenre===gn?`border-color:${GENRE_COLOR[gn]};color:${GENRE_COLOR[gn]};`:''}">${gn}</button>`).join('');
-  btns.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ rallyGenre=b.dataset.genre; renderTeamBuilder(); }));
+  btns.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ rallyGenre=b.dataset.genre; renderTeamBuilder(); saveState(); }));
 }
-document.getElementById('rlNoBtn').addEventListener('click', ()=>{ rallyLeaderAnswer=false; renderTeamBuilder(); });
+document.getElementById('rlNoBtn').addEventListener('click', ()=>{ rallyLeaderAnswer=false; renderTeamBuilder(); saveState(); });
 
 function teamSkillTotalsHTML(team){
   const sumFields = ['skillDmgUp','normalDmgUp','skillDmgReduce','normalDmgReduce','fanCapUp','rallyCapUp'];
@@ -1589,9 +1895,9 @@ function lineupBlockHTML(title, candidate, note, pool, scorer){
       <h3 class="lineup-title">${title}</h3>
       ${genreNote}
     </div>
-    <p class="lineup-note">${note}</p>
+    ${note ? `<details class="why"><summary>Why this lineup</summary><p>${note}</p></details>` : ''}
     <div class="tags" style="margin-bottom:10px;">
-      ${candidate.team.map(g=>`<span class="tag" style="color:${GENRE_COLOR[g.genre]};border-color:${GENRE_COLOR[g.genre]}55;">${g.name}</span>`).join('')}
+      ${candidate.team.map(g=>`<span class="tag girl-tag" data-girl="${g.name}" style="color:${GENRE_COLOR[g.genre]};border-color:${GENRE_COLOR[g.genre]}55;">${g.name}</span>`).join('')}
     </div>
     <p class="lineup-note" style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;">${totalLine}</p>
     <div class="skill-list" style="margin-top:6px;padding-top:10px;">
@@ -1623,7 +1929,7 @@ function renderTeamBuilder(){
 
   let html = '';
 
-  html += lineupBlockHTML('PvP', maxDmgTeam, 'For when someone attacks you. This lineup is built to hit back hard — it favours the girls with the biggest attack bonuses, since defending is about out-damaging the attacker before your fans run down. Rally cap is ignored here because it only helps when you\'re the one attacking.', pool, maxDamageScorer);
+  html += lineupBlockHTML('PvP', maxDmgTeam, 'When someone rallies your HQ. Your pool is fixed by the game, so Fan Cap and Rally Cap do nothing — pure combat skills.', pool, maxDamageScorer);
 
   if(rallyLeaderAnswer===true){
     const genre = rallyGenre || detectMainGenre(pool);
@@ -1633,11 +1939,11 @@ function renderTeamBuilder(){
     if(inGenreCount < 5){
       html += `<div class="lineup-block">
         <div class="lineup-head"><h3 class="lineup-title">Rally lineups</h3></div>
-        <p class="lineup-note">You've only got ${inGenreCount} ${genre} girl(s) unlocked, so a full single-genre rally team isn't possible yet. Unlock ${5-inGenreCount} more ${genre} girl(s) to get the +25% genre bonus, which is worth more than almost any individual girl swap.</p>
+        <p class="lineup-note">Only ${inGenreCount} ${genre} girls unlocked. Unlock ${5-inGenreCount} more for the +25% genre bonus.</p>
       </div>`;
     } else {
       html += `<div class="lineup-block"><div class="lineup-head"><h3 class="lineup-title">Rally lineups — ${genre}</h3></div>
-        <p class="lineup-note">Only the rally leader's five girls actually fight — everyone joining just adds fans. Your Rally Capacity sets how big the bus can get, so these options trade damage against how many fans your group can pour in. All five stay in one genre to keep the +25% stat bonus.</p></div>`;
+        <p class="lineup-note">Only your five girls fight — everyone joining just adds fans. Long fights, so Skill Damage matters as much as Normal Attack.</p></div>`;
 
       // Which cap girls in this genre actually contribute in a fight? A girl
       // whose only skill is capacity (Rock's Vesper/Kelly) is a dead slot in a
@@ -1649,12 +1955,12 @@ function renderTeamBuilder(){
 
       if(capGirlsHere.length === 0){
         html += `<div class="lineup-block"><div class="lineup-head"><h3 class="lineup-title">No rally-capacity option in ${genre}</h3></div>
-          <p class="lineup-note">${genre} has no girls with an Increase Rally Capacity skill, so your bus stays at its base size. That isn't fatal — it means you lean on teammates to keep reinforcing you, and bring the hardest-hitting lineup instead.</p></div>`;
+          <p class="lineup-note">No Rally Capacity girls in ${genre}, so your bus stays base size. Lean on teammates to reinforce.</p></div>`;
         if(damageTeam) html += lineupBlockHTML(`Best ${genre} rally lineup`, damageTeam,
           `The hardest-hitting five ${genre} girls, all one genre for the +25% stat bonus.`, pool, rallyScorer);
       } else if(usableCaps.length === 0){
         html += `<div class="lineup-block"><div class="lineup-head"><h3 class="lineup-title">Rally capacity not worth it in ${genre}</h3></div>
-          <p class="lineup-note">${genre}'s only rally-cap girls (${capGirlsHere.map(g=>g.name).join(' and ')}) bring no attack skills and no reductions — nothing but the capacity itself. Over a fight lasting minutes you'd be swinging with dead slots, which costs far more than the bigger bus gains. Take the lineup below and rely on teammates to keep you topped up.</p></div>`;
+          <p class="lineup-note">${capGirlsHere.map(g=>g.name).join(' and ')} carry capacity but no combat skills — dead slots in a long fight. Not worth the bus size.</p></div>`;
         if(damageTeam) html += lineupBlockHTML(`Best ${genre} rally lineup`, damageTeam,
           `The hardest-hitting five ${genre} girls, all one genre for the +25% stat bonus.`, pool, rallyScorer);
       } else {
@@ -1662,47 +1968,217 @@ function renderTeamBuilder(){
         const balTeam = buildRallyTeam(pool, genre, 1);
         if(maxTeam && maxTeam.capCount > 0){
           html += lineupBlockHTML(`Max capacity — ${maxTeam.capCount} rally-cap girl${maxTeam.capCount>1?'s':''}`, maxTeam,
-            `Biggest bus you can field (+${Math.round(maxTeam.capTotal*100)}% rally capacity). Use this when attacking an HQ or club, or any time you expect to be outgunned — a defender can hold up to 32M fans while a typical bus is only 12-20M, so without capacity you often lose even against weaker stats.`, pool, rallyScorer);
+            `+${Math.round(maxTeam.capTotal*100)}% bus. For attacking an HQ or club — a defender holds up to 32M, a normal bus only 12-20M.`, pool, rallyScorer);
         }
         const balShown = balTeam && balTeam.capCount > 0 && !sameTeam(balTeam, maxTeam);
         if(balShown){
           html += lineupBlockHTML(`Balanced — ${balTeam.capCount} rally-cap girl${balTeam.capCount>1?'s':''}`, balTeam,
-            `A bigger bus (+${Math.round(balTeam.capTotal*100)}% capacity) without giving up much damage. The safe default for most players.`, pool, rallyScorer);
+            `+${Math.round(balTeam.capTotal*100)}% bus with most of the damage intact. The safe default.`, pool, rallyScorer);
         }
         // Only hide the damage lineup if it duplicates something actually shown.
         if(damageTeam && !sameTeam(damageTeam, maxTeam) && !(balShown && sameTeam(damageTeam, balTeam))){
           html += lineupBlockHTML('Max damage — no rally-cap girls', damageTeam,
-            `Pure damage: the strongest attack and reduction skills in ${genre}. Only pick this if your stats are far ahead of who you're fighting, or your group reinforces you constantly — otherwise your bus will be too small to finish the job.`, pool, rallyScorer);
+            `No capacity, maximum damage. Only if you out-stat your target or your group reinforces non-stop.`, pool, rallyScorer);
         }
       }
     }
   }
 
   html += `<div class="lineup-block"><div class="lineup-head"><h3 class="lineup-title">P25 — 5 Teams</h3></div>
-    <p class="lineup-note">P25 works like Parking Wars but needs 5 separate teams, and no girl can appear twice. Same priorities: fan pool and stats first, attack bonuses second. Where you have five of a genre, that team gets the full +25% stat bonus; leftovers from your thinner genres get grouped into the last team. Listed strongest first — but you can order them however you like in-game, and a weaker team placed early can still be useful for wearing down a strong opponent.</p>
+    <p class="lineup-note">Five teams, no girl twice. Short fights, so stats and Normal Attack lead. Listed strongest first — reorder in-game as you like.</p>
     ${p25Teams.map((t,i)=>lineupBlockHTML(`Team ${i+1}`, t, '', pool, parkingScorer)).join('')}
     ${p25Teams.length<5 ? `<p class="lineup-note">Only enough unlocked girls for ${p25Teams.length} full team(s) — unlock more (25 total needed) for a complete 5-team squad.</p>` : ''}
   </div>`;
 
-  html += `<div class="disclaimer" style="margin-top:20px;">
-    <b>Want a Parking Wars team too?</b> Same priorities as P25, but just one team.
-    <div class="picker-btns" style="margin-top:10px;">
-      <button class="ghost" id="pwYesBtn">Yes, show me one</button>
-      <button class="ghost" id="pwNoBtn">No thanks</button>
-    </div>
-  </div>`;
-
-  if(parkingWarsAnswer===true){
-    const parkingTeam = bestLineup(pool, parkingScorer);
-    html += lineupBlockHTML('Parking Wars', parkingTeam, 'A bigger fan pool is your health bar here — the first side to lose 20% of their fans loses, so Fan Cap and raw stats come first, with attack bonuses close behind. Five girls of one genre gives +25% to your whole team\'s stats, which is almost always worth more than swapping in a slightly better girl from another genre.', pool, parkingScorer);
-  }
+  const parkingTeam = bestLineup(pool, parkingScorer);
+  html += lineupBlockHTML('Parking Wars', parkingTeam,
+    'Short fights, so stats and Normal Attack decide it. Fan Cap counts here — fans are your health bar.', pool, parkingScorer);
 
   tbResults.innerHTML = html;
+}
 
-  const pwYesBtn = document.getElementById('pwYesBtn');
-  const pwNoBtn = document.getElementById('pwNoBtn');
-  if(pwYesBtn) pwYesBtn.addEventListener('click', ()=>{ parkingWarsAnswer=true; renderTeamBuilder(); });
-  if(pwNoBtn) pwNoBtn.addEventListener('click', ()=>{ parkingWarsAnswer=false; renderTeamBuilder(); });
+// ---- Harmony assistant ----
+//
+// Pairing rules, straight from the game:
+//   - only abroad girls (Tokyo/Bali/Rome) and Stock Auction girls can RECEIVE
+//   - an assistant must be the same genre and rank BELOW the receiver
+//   - Stock Auction sits above every season, so it receives but never assists
+//   - Burj / Anniversary / Discord rank below everyone: they assist anybody
+//     abroad, and can never receive
+const ABROAD_MAPS = new Set(['Tokyo','Bali','Rome']);
+function harmonyRank(g){
+  if(g.map === 'Stock Auction') return 99;
+  if(ABROAD_MAPS.has(g.map)) return g.season || 0;
+  return 0;                       // Burj / Anniversary / Discord
+}
+function canReceiveHarmony(g){
+  return g.map === 'Stock Auction' || ABROAD_MAPS.has(g.map);
+}
+function canAssist(assistant, receiver){
+  return assistant.genre === receiver.genre
+      && assistant.name !== receiver.name
+      && canReceiveHarmony(receiver)
+      && harmonyRank(assistant) < harmonyRank(receiver);
+}
+// Cheapest girls to give up go first: someone who can never receive Harmony
+// loses nothing by being assigned, whereas burning an abroad girl throws away
+// a girl who could have been a receiver herself.
+function assistantCost(g){
+  let cost = canReceiveHarmony(g) ? 100 : 0;     // could she have been a receiver?
+  cost += workingSkills(g, false) * 10;          // how much does the lineup lose?
+  cost += (g.total / 10000);                     // and her raw stats
+  return cost;
+}
+
+let harmonyGenre = null;
+
+// Which lineup are we building Harmony around? Each option names a real team
+// from the builder, so assistants are chosen to protect the team you actually
+// field rather than a generic "best five".
+const HARMONY_TEAMS = [
+  {id:'pvp',     label:'PvP / HQ defence', build:(pool)=>bestFive(pool, maxDamageScorer.params)},
+  {id:'parking', label:'Parking & P25',    build:(pool)=>bestFive(pool, parkingScorer.params)},
+  {id:'rally0',  label:'Rally — no rally-cap', build:(pool)=>{
+      const t = buildRallyTeam(pool, harmonyGenre, 0, false); return t ? t.team : bestFive(pool, rallyScorer.params); }},
+  {id:'rally1',  label:'Rally — 1 rally-cap', build:(pool)=>{
+      const t = buildRallyTeam(pool, harmonyGenre, 1, false); return t ? t.team : bestFive(pool, rallyScorer.params); }},
+  {id:'rally3',  label:'Rally — max rally-cap', build:(pool)=>{
+      const t = buildRallyTeam(pool, harmonyGenre, 3, true); return t ? t.team : bestFive(pool, rallyScorer.params); }},
+];
+let harmonyTeamId = 'pvp';
+
+// Works out the current Harmony plan: which girls are assigned as assistants,
+// and to whom. Shared so the PEAK tab can see the same assignments and give
+// advice that fits them, instead of the two tabs contradicting each other.
+function currentHarmonyPlan(){
+  const pool = GIRLS.filter(g => unlocked.has(g.name));
+  if(!pool.length || !harmonyGenre) return null;
+  const inGenre = pool.filter(g=>g.genre===harmonyGenre);
+  if(inGenre.length < 5) return null;
+  const teamDef = HARMONY_TEAMS.find(t=>t.id===harmonyTeamId) || HARMONY_TEAMS[0];
+  const mainTeam = teamDef.build(inGenre);
+  const teamNames = new Set(mainTeam.map(g=>g.name));
+  const receivers = mainTeam.filter(canReceiveHarmony)
+    .sort((a,b)=> (harmonyRank(b)-harmonyRank(a)) || (b.total-a.total));
+  const taken = new Set(), assignments = [];
+  receivers.forEach(recv=>{
+    const picks = inGenre
+      .filter(a => canAssist(a,recv) && !teamNames.has(a.name) && !taken.has(a.name))
+      .sort((a,b)=> assistantCost(a)-assistantCost(b))
+      .slice(0,3);
+    picks.forEach(p=>taken.add(p.name));
+    if(picks.length) assignments.push({receiver:recv, assistants:picks});
+  });
+  return {genre:harmonyGenre, teamLabel:teamDef.label, mainTeam, receivers, assignments,
+          assistantNames:new Set([...taken])};
+}
+
+function renderHarmony(){
+  const pool = GIRLS.filter(g => unlocked.has(g.name));
+  const box  = document.getElementById('hmResults');
+  const btns = document.getElementById('hmGenreBtns');
+  const tbtns= document.getElementById('hmTeamBtns');
+  if(!box || !btns) return;
+
+  const genres = [...new Set(pool.map(g=>g.genre))].sort();
+  // Only ask which genre when the user actually owns more than one.
+  const genreQ = document.getElementById('hmGenreQ');
+  if(genres.length === 1){
+    harmonyGenre = genres[0];
+    if(genreQ) genreQ.style.display = 'none';
+  } else {
+    if(genreQ) genreQ.style.display = 'block';
+    btns.innerHTML = genres.length
+      ? genres.map(gn=>`<button class="ghost" data-genre="${gn}" style="${harmonyGenre===gn?`border-color:${GENRE_COLOR[gn]};color:${GENRE_COLOR[gn]};`:''}">${gn}</button>`).join('')
+      : '<span class="lineup-note" style="margin:0;">Tick your unlocked girls in Build my team first.</span>';
+    btns.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+      harmonyGenre = b.dataset.genre; renderHarmony(); saveState();
+    }));
+  }
+
+  if(tbtns){
+    tbtns.innerHTML = HARMONY_TEAMS.map(t=>
+      `<button class="ghost" data-team="${t.id}" style="${harmonyTeamId===t.id?'border-color:var(--gold);color:var(--gold);':''}">${t.label}</button>`).join('');
+    tbtns.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+      harmonyTeamId = b.dataset.team; renderHarmony(); saveState();
+    }));
+  }
+
+  if(!pool.length){ box.innerHTML = `<div class="empty"><b>No girls selected.</b><br>Tick your unlocked girls in Build my team, then come back.</div>`; return; }
+  if(!harmonyGenre || !genres.includes(harmonyGenre)){ box.innerHTML = `<div class="empty"><b>Pick a genre above</b><br>to see who can assist whom.</div>`; return; }
+
+  const inGenre = pool.filter(g=>g.genre===harmonyGenre);
+  const teamDef = HARMONY_TEAMS.find(t=>t.id===harmonyTeamId) || HARMONY_TEAMS[0];
+  const mainTeam = inGenre.length>=5 ? teamDef.build(inGenre) : inGenre;
+  const teamNames = new Set(mainTeam.map(g=>g.name));
+
+  // Only girls IN the chosen lineup are worth feeding — Harmony exists to make
+  // the team you field stronger, not to buff a girl sitting on the bench.
+  const receivers = mainTeam.filter(canReceiveHarmony)
+    .sort((a,b)=> (harmonyRank(b) - harmonyRank(a)) || (b.total - a.total));
+
+  let html = `<div class="lineup-block"><div class="lineup-head">
+      <h3 class="lineup-title">${teamDef.label} — ${harmonyGenre}</h3></div>
+    <p class="lineup-note">${mainTeam.map(g=>g.name).join(', ')} — picked on skills and stats, and kept out of the assistant pool. A girl who can't receive Harmony can still be one of your best five.</p></div>`;
+
+  const cannotReceive = mainTeam.filter(g=>!canReceiveHarmony(g));
+  if(!receivers.length){
+    html += `<div class="lineup-block"><div class="lineup-head"><h3 class="lineup-title">Nobody in this lineup can receive</h3></div>
+      <p class="lineup-note">Every girl in this team comes from Burj, Anniversary or Discord, which rank below everyone and can never receive Harmony. You would need an abroad or Stock Auction girl in the lineup first.</p></div>`;
+    box.innerHTML = html; return;
+  }
+
+  // A girl spent as an assistant is gone — she cannot also be fed herself, and
+  // cannot be handed to a second main girl.
+  const taken = new Set();
+  receivers.forEach(recv=>{
+    const options = inGenre
+      .filter(a => canAssist(a, recv) && !teamNames.has(a.name) && !taken.has(a.name))
+      .sort((a,b)=> assistantCost(a) - assistantCost(b));
+    const picks = options.slice(0,3);
+    picks.forEach(p=>taken.add(p.name));
+
+    html += `<div class="lineup-block">
+      <div class="lineup-head">
+        <h3 class="lineup-title">${recv.name}</h3>
+        <span class="genre-badge">${recv.map}${recv.season?` · season ${recv.season}`:''}</span>
+      </div>`;
+    if(!picks.length){
+      const anyLegal = inGenre.some(a=>canAssist(a,recv));
+      html += `<p class="lineup-note">${anyLegal
+        ? `No SSR left for her — the ${harmonyGenre} girls who could legally assist are either in this lineup or already assigned above.`
+        : `No SSR of yours can assist her — every ${harmonyGenre} girl you own ranks the same or higher.`}
+        <b>Assign your best R and SR girls to her instead.</b> They do the same job, cost you nothing in a lineup, and should always be spent before an SSR.</p>`;
+    } else {
+      html += `<div class="tags" style="margin-bottom:10px;">
+        ${picks.map(p=>`<span class="tag girl-tag" data-girl="${p.name}" style="color:${GENRE_COLOR[p.genre]};border-color:${GENRE_COLOR[p.genre]}55;">${p.name}</span>`).join('')}
+      </div>
+      <div class="skill-list" style="padding-top:10px;">
+        <div class="skill-list-title">Slot by slot</div>
+        ${picks.map((p,i)=>`<div class="skill-chip">
+           <span>Slot ${i+1} (unlocks at level ${[120,140,160][i]})</span>
+           <span>${p.name} — ${p.map}${p.season?` S${p.season}`:''}</span>
+         </div>`).join('')}
+      </div>
+      <details class="why"><summary>What this costs you</summary><p>
+        ${picks.map(p=>p.name).join(', ')} ${picks.length>1?'are':'is'} locked out of P25, parking, HQ defence and club work for good.
+        Get each assistant to <b>PEAK 80</b> if you can: it lifts sync from 75% to 100%, worth more than any amount of PEAK below that. Level 160 gives the most, but a level 140 assistant is still perfectly fine.
+      </p></details>`;
+    }
+    html += `</div>`;
+  });
+
+  if(cannotReceive.length){
+    html += `<div class="lineup-block">
+      <div class="lineup-head"><h3 class="lineup-title">Can't receive Harmony</h3></div>
+      <div class="tags" style="margin-bottom:10px;">
+        ${cannotReceive.map(g=>`<span class="tag girl-tag" data-girl="${g.name}" style="color:${GENRE_COLOR[g.genre]};border-color:${GENRE_COLOR[g.genre]}55;">${g.name}</span>`).join('')}
+      </div>
+      <p class="lineup-note">${cannotReceive.map(g=>g.name+' ('+g.map+')').join(', ')} — ${cannotReceive.length===1?'she is':'they are'} in your lineup on merit, but Burj, Anniversary and Discord girls can never take an assistant. Nothing to do here; keep ${cannotReceive.length===1?'her':'them'} playing.</p>
+    </div>`;
+  }
+
+  box.innerHTML = html;
 }
 
 // ---- PEAK Assistant ----
@@ -1756,17 +2232,50 @@ function planPeak(girls, targets, budget){
   const steps = [];
   let spent = 0;
   const cap = budget && budget>0 ? budget : Infinity;
+  // Harmony assistants have an extra milestone the buff table knows nothing
+  // about: at PEAK 80 their sync rate goes 75% -> 100%, so they hand over a
+  // third more Sing and Dance. It is treated as a real step with its own value
+  // so it competes for photos on the same footing as the stat milestones.
+  const assistantOf = harmonyAssistantMap();
+  // What the PEAK 80 sync jump is actually worth, in the same units the stat
+  // milestones use (percentage points of team stats).
+  //
+  // Measured from two of the user's own readings — same girl stats, same level
+  // 140, only PEAK differing: peak 40 gave 47,930 total, peak 80 gave 66,100.
+  // So the jump is worth about +18,000 stats ONCE, to ONE girl. Expressed
+  // against a reference team total that is roughly 0.6 percentage points —
+  // far below a 3% genre milestone, which applies to the whole team.
+  //
+  // An earlier version guessed 9 here, which wrongly pushed the sync jump to
+  // the top of the plan. It belongs near the bottom: worth doing eventually,
+  // never worth doing before the stat milestones.
+  const SYNC_STAT_GAIN = 18000;      // measured, see above
+  const SYNC_REF_TEAM  = 3000000;    // reference team stat total
+  const SYNC_VALUE = (SYNC_STAT_GAIN / SYNC_REF_TEAM) * 100;   // ≈ 0.6 points
 
   for(let iter=0; iter<400; iter++){
     let best=null, bestEff=-1;
     state.forEach(girl=>{
+      // candidate 1: the next ordinary stat milestone
       const next = PEAK_MILESTONES.find(m=>m.lvl > girl.level);
-      if(!next) return;
-      const cost = (next.lvl - girl.level) * PHOTOS_PER_LEVEL;
-      const val = milestoneValue(next, girl.genre, targets);
-      if(val<=0 || cost<=0) return;
-      const eff = val / cost;
-      if(eff > bestEff){ bestEff=eff; best={girl, next, cost, val}; }
+      if(next){
+        const cost = (next.lvl - girl.level) * PHOTOS_PER_LEVEL;
+        const val = milestoneValue(next, girl.genre, targets);
+        if(val>0 && cost>0){
+          const eff = val / cost;
+          if(eff > bestEff){ bestEff=eff; best={girl, next, cost, val, sync:false}; }
+        }
+      }
+      // candidate 2: the Harmony sync jump, only for an assigned assistant
+      if(girl.name && assistantOf.has(girl.name) && girl.level < HARMONY_SYNC_STEP){
+        const cost = (HARMONY_SYNC_STEP - girl.level) * PHOTOS_PER_LEVEL;
+        const eff = SYNC_VALUE / cost;
+        if(cost>0 && eff > bestEff){
+          bestEff = eff;
+          best = {girl, cost, val:SYNC_VALUE, sync:true,
+                  next:{lvl:HARMONY_SYNC_STEP, stat:'sync', scope:'harmony', pct:25}};
+        }
+      }
     });
     if(!best) break;
     if(spent + best.cost > cap) break;
@@ -1775,7 +2284,9 @@ function planPeak(girls, targets, budget){
       genre: best.girl.genre, name: best.girl.name || null,
       from: best.girl.level, to: best.next.lvl,
       cost: best.cost, gain: best.next.pct, stat: best.next.stat,
-      scope: best.next.scope, effPer1k: (best.val/best.cost)*1000, cumulative: spent,
+      scope: best.next.scope, sync: !!best.sync,
+      assists: best.sync ? assistantOf.get(best.girl.name) : null,
+      effPer1k: (best.val/best.cost)*1000, cumulative: spent,
     });
     best.girl.level = best.next.lvl;
   }
@@ -1826,7 +2337,35 @@ document.getElementById('pkAddBtn').addEventListener('click', pkAddGroup);
 document.getElementById('pkClearBtn').addEventListener('click', ()=>{ peakGirls=[]; renderPeak(); });
 document.getElementById('pkBudget').addEventListener('input', renderPeak);
 
+// Cross-checks the PEAK entries against the Harmony plan. A girl being used as
+// an assistant has a PEAK target the normal optimiser knows nothing about:
+// reaching PEAK 80 lifts her sync rate from 75% to 100%, so she hands over a
+// third more of everything. That is usually the best photo spend on the board,
+// and it never shows up in the team-buff plan below.
+const HARMONY_SYNC_STEP = 80;
+// Which of the PEAK entries are currently serving as Harmony assistants, and
+// who they assist. The PEAK plan uses this to insert the sync-rate milestone
+// (PEAK 80 => 75% sync becomes 100%) as a real step in the table, since the
+// normal team-buff maths knows nothing about it.
+function harmonyAssistantMap(){
+  const plan = currentHarmonyPlan();
+  const map = new Map();
+  if(!plan) return map;
+  plan.assignments.forEach(a=>a.assistants.forEach(x=>map.set(x.name, a.receiver.name)));
+  return map;
+}
+function harmonyPeakAdvice(){
+  const map = harmonyAssistantMap();
+  if(!map.size) return '';
+  const below = peakGirls.filter(pg=>pg.name && map.has(pg.name) && pg.level < HARMONY_SYNC_STEP);
+  if(below.length) return `<b>PEAK 80 matters twice over for ${below.map(p=>p.name).join(', ')}</b> — it is where a Harmony assistant's sync rate jumps from 75% to 100%. Flagged in the table below.<br><br>`;
+  const missing = [...map.keys()].filter(n=>!peakGirls.some(pg=>pg.name===n));
+  if(missing.length) return `<b>Tip:</b> add your Harmony assistants above by name (${missing.slice(0,3).join(', ')}${missing.length>3?'…':''}) and PEAK 80 will be costed for them too.<br><br>`;
+  return '';
+}
+
 function renderPeak(){
+  saveState();
   const groups = {};
   peakGirls.forEach(g=>{ const key=g.genre+'|'+g.level+'|'+(g.name||''); groups[key]=(groups[key]||0)+1; });
   document.getElementById('pkEntries').innerHTML = Object.entries(groups).map(([key,count])=>{
@@ -1857,6 +2396,15 @@ function renderPeak(){
       ${PEAK_GENRES.map(g=>`<div class="skill-chip"><span style="color:${GENRE_COLOR[g]};">${g}</span><span>${buffs[g].sing.toFixed(1)}% Sing · ${buffs[g].dance.toFixed(1)}% Dance</span></div>`).join('')}
     </div>`;
 
+  // Only ask which genres to strengthen when there is an actual choice — if
+  // every girl entered is one genre, that is obviously the target.
+  const entryGenres = [...new Set(peakGirls.map(g=>g.genre))];
+  const pkQ = document.getElementById('pkTargetQ');
+  if(entryGenres.length <= 1){
+    if(pkQ) pkQ.style.display = 'none';
+    if(entryGenres.length === 1) pkTargets = new Set(entryGenres);
+  } else if(pkQ){ pkQ.style.display = 'block'; }
+
   if(pkTargets.size===0){
     document.getElementById('pkResults').innerHTML = `<div class="empty"><b>Pick at least one genre above</b><br>to get an upgrade plan.</div>`;
     return;
@@ -1873,12 +2421,15 @@ function renderPeak(){
   const targetList = [...pkTargets];
   const rows = plan.steps.map((s,i)=>{
     const who = s.name ? `<b>${s.name}</b>` : `any <b>${s.genre}</b> girl`;
+    const gain = s.sync
+      ? `<b style="color:var(--gold);">Sync 75% → 100%</b> <span style="color:var(--text-faint);">(Harmony, assists ${s.assists})</span>`
+      : `+${s.gain}% ${s.stat==='sing'?'Sing':'Dance'} <span style="color:var(--text-faint);">(${s.scope==='all'?'all':'genre'})</span>`;
     return `
-    <tr>
+    <tr${s.sync?' style="background:rgba(245,197,24,0.06);"':''}>
       <td>${i+1}</td>
       <td><span class="genre-dot" style="background:${GENRE_COLOR[s.genre]};"></span>Bring ${who} from level <b>${s.from}</b> → <b>${s.to}</b></td>
       <td>${s.cost.toLocaleString()}</td>
-      <td>+${s.gain}% ${s.stat==='sing'?'Sing':'Dance'} <span style="color:var(--text-faint);">(${s.scope==='all'?'all':'genre'})</span></td>
+      <td>${gain}</td>
       <td>${s.cumulative.toLocaleString()}</td>
     </tr>`;
   }).join('');
@@ -1888,6 +2439,7 @@ function renderPeak(){
       <div class="reco-eyebrow">Recommended plan</div>
       <div class="reco-main">${plan.steps.length} upgrades · ${plan.spent.toLocaleString()} photos</div>
       <div class="reco-body">
+        ${harmonyPeakAdvice()}
         Ordered by buff-per-photo, best value first. ${budget>0 ? `Fits your ${budget.toLocaleString()}-photo budget.` : 'No budget limit set — this is the full efficient path.'}
         Levels 5→70 are the sweet spot at roughly 1% per 1,000 photos; levels 100 and 150 are the worst value in the game, which is why the plan pushes many girls to 70 before taking anyone deeper.
       </div>
@@ -1907,16 +2459,52 @@ function renderPeak(){
     </div>`;
 }
 
-renderPeak();
+// Restore anything saved from a previous visit, then allow future saves.
+(function restoreSaved(){
+  const s = loadState();
+  if(s){
+    if(Array.isArray(s.unlocked)){
+      // The roster gets edited (girls renamed or removed), so drop anything
+      // saved under a name that no longer exists rather than silently
+      // carrying dead entries that make the pool look empty.
+      const live = new Set(GIRLS.map(g=>g.name));
+      const RENAMED = {Ella:'Isla', Vivienne:'Vivian', Noora:'Nora', Raith:'Ratih', Mio:'Rio'};
+      unlocked = new Set(s.unlocked.map(n=>RENAMED[n]||n).filter(n=>live.has(n)));
+    }
+    if(Array.isArray(s.peakGirls)) peakGirls = s.peakGirls;
+    if(Array.isArray(s.pkTargets)) pkTargets = new Set(s.pkTargets);
+    if(typeof s.rallyLeaderAnswer !== 'undefined') rallyLeaderAnswer = s.rallyLeaderAnswer;
+    if(typeof s.rallyGenre !== 'undefined') rallyGenre = s.rallyGenre;
+    if(typeof s.parkingWarsAnswer !== 'undefined') parkingWarsAnswer = s.parkingWarsAnswer;
+    if(typeof s.harmonyGenre !== 'undefined') harmonyGenre = s.harmonyGenre;
+    if(s.harmonyTeamId) harmonyTeamId = s.harmonyTeamId;
+    if(typeof s.harmonyGenre !== 'undefined') harmonyGenre = s.harmonyGenre;
+    const bud = document.getElementById('pkBudget');
+    if(bud && s.pkBudget) bud.value = s.pkBudget;
+    document.querySelectorAll('#pkTargetGenres button').forEach(b=>{
+      const gn = b.dataset.genre;
+      if(pkTargets.has(gn)){ b.style.borderColor = GENRE_COLOR[gn]; b.style.color = GENRE_COLOR[gn]; }
+    });
+  }
+  saveReady = true;
+})();
 
-renderChips();
-renderTbTable();
-renderTeamBuilder();
+const clearBtnEl = document.getElementById('clearSavedBtn');
+if(clearBtnEl) clearBtnEl.addEventListener('click', ()=>{
+  clearState();
+  unlocked = new Set(); peakGirls = []; pkTargets = new Set();
+  rallyLeaderAnswer = null; rallyGenre = null; parkingWarsAnswer = null; harmonyGenre = null;
+  const bud = document.getElementById('pkBudget'); if(bud) bud.value='';
+  document.querySelectorAll('#pkTargetGenres button').forEach(b=>{ b.style.borderColor=''; b.style.color=''; });
+  renderChips(); renderTbTable(); renderTeamBuilder(); renderPeak(); renderHarmony();
+});
 
-renderPicker();
-renderAll();
-renderRoster();
-renderLeaderboard();
+// Each render is guarded: if one ever throws, it must not stop the others and
+// leave a tab looking empty.
+[renderPeak, renderHarmony, renderChips, renderTbTable, renderTeamBuilder,
+ renderPicker, renderAll, renderRoster, renderLeaderboard].forEach(fn=>{
+  try{ fn(); }catch(e){ console.error(fn.name+' failed at startup', e); }
+});
 </script>
 </body>
 </html>

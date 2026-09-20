@@ -1,0 +1,3055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Idol Company — Roster Compare</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0910;
+    --bg-panel:#15131d;
+    --bg-panel-2:#1b1826;
+    --line:#2a2637;
+    --text:#f2eee6;
+    --text-dim:#9c96ac;
+    --text-faint:#6b6580;
+    --gold:#f5c518;
+    --gold-dim:#8a7420;
+    --rock:#e63950;
+    --rnb:#9b6bd9;
+    --pop:#ff4fa3;
+    --hiphop:#e8752c;
+    --edm:#2bd9c9;
+    --good:#4ade80;
+    --bad:#f87171;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(245,197,24,0.10), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 0%, rgba(155,107,217,0.09), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    line-height:1.5;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:36px 20px 80px;}
+
+  /* Header */
+  header{margin-bottom:32px;padding:26px 22px 24px;border-radius:var(--radius);}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin:0 0 8px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .eyebrow::before{content:'';width:22px;height:1px;background:var(--gold-dim);display:inline-block;}
+  h1{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(40px,7vw,64px);
+    letter-spacing:0.01em;
+    margin:0 0 6px;
+    line-height:0.95;
+    background:linear-gradient(180deg,#fff, #cfc6e6 140%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .sub{color:var(--text-dim);font-size:15px;max-width:640px;margin:0;}
+  .meta{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    margin:0 0 14px;
+  }
+
+  .disclaimer-foot{
+    margin-top:56px;
+    max-width:640px;
+    margin-left:auto;margin-right:auto;
+    text-align:center;
+    font-size:12px;
+    color:var(--text-faint);
+    line-height:1.6;
+  }
+
+  /* Picker */
+  .picker{
+    margin-top:32px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    align-items:flex-start;
+  }
+  .slot{position:relative;flex:1 1 220px;min-width:200px;}
+  .slot input{
+    width:100%;
+    background:var(--bg-panel);
+    border:1.5px solid var(--line);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    padding:13px 14px;
+    border-radius:10px;
+    outline:none;
+    transition:border-color .15s;
+  }
+  .slot input:focus{border-color:var(--gold);}
+  .slot input::placeholder{color:var(--text-faint);}
+  .suggestions{
+    position:absolute;top:calc(100% + 6px);left:0;right:0;
+    background:var(--bg-panel-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    max-height:260px;overflow-y:auto;
+    z-index:20;
+    box-shadow:0 12px 30px rgba(0,0,0,0.5);
+    display:none;
+  }
+  .suggestions.show{display:block;}
+  .sugg-item{
+    padding:10px 14px;
+    cursor:pointer;
+    font-size:14px;
+    display:flex;justify-content:space-between;align-items:center;
+    border-bottom:1px solid var(--line);
+  }
+  .sugg-item:last-child{border-bottom:none;}
+  .sugg-item:hover{background:rgba(245,197,24,0.08);}
+  .sugg-item .g-tag{font-size:10px;font-family:'IBM Plex Mono',monospace;padding:2px 6px;border-radius:5px;text-transform:uppercase;letter-spacing:.04em;}
+
+  .picker-btns{display:flex;gap:10px;}
+  button.ghost{
+    background:transparent;
+    border:1.5px solid var(--line);
+    color:var(--text-dim);
+    padding:12px 16px;
+    border-radius:10px;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all .15s;
+    white-space:nowrap;
+  }
+  button.ghost:hover{border-color:var(--gold);color:var(--gold);}
+
+  /* Empty state */
+  .empty{
+    margin-top:60px;
+    text-align:center;
+    color:var(--text-faint);
+    padding:60px 20px;
+    border:1.5px dashed var(--line);
+    border-radius:var(--radius);
+    font-size:15px;
+  }
+  .empty b{color:var(--text-dim);}
+
+  /* Compare grid */
+  .compare-grid{
+    margin-top:36px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:16px;
+  }
+  .card{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:0;
+    overflow:hidden;
+    position:relative;
+    transition:box-shadow .2s, transform .2s;
+  }
+  .card.top-pick{
+    border-color:rgba(245,197,24,0.5);
+    box-shadow:0 0 0 1px rgba(245,197,24,0.25), 0 20px 60px -20px rgba(245,197,24,0.35);
+  }
+  .card.top-pick::before{
+    content:'';
+    position:absolute;top:-40%;left:50%;transform:translateX(-50%);
+    width:220px;height:220px;
+    background:radial-gradient(circle, rgba(245,197,24,0.28), transparent 65%);
+    pointer-events:none;
+  }
+  .card-top{height:5px;}
+  .card-body{padding:20px;}
+  .card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+  .card-remove{
+    background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:18px;line-height:1;padding:2px 6px;border-radius:6px;
+  }
+  .card-remove:hover{color:var(--bad);background:rgba(248,113,113,0.1);}
+  .name{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:28px;
+    letter-spacing:0.01em;
+    margin:0 0 4px;
+  }
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+  .tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    padding:3px 8px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    color:var(--text-dim);
+  }
+  .pick-badge{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:var(--bg);
+    background:var(--gold);
+    padding:4px 9px;
+    border-radius:6px;
+    font-weight:700;
+  }
+  .pick-badge.dominant{background:var(--good);}
+  .pick-badge.stat-lean{background:var(--gold);}
+  .pick-badge.skill-lean{background:var(--edm);color:var(--bg);}
+
+  .stat-row{margin-bottom:10px;}
+  .stat-label{
+    display:flex;justify-content:space-between;
+    font-size:12px;color:var(--text-dim);margin-bottom:4px;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .stat-label span:last-child{color:var(--text);}
+  .stat-bar-bg{height:7px;background:var(--bg-panel-2);border-radius:4px;overflow:hidden;border:1px solid var(--line);}
+  .stat-bar-fill{height:100%;border-radius:4px;}
+
+  .skill-list{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);}
+  .skill-list-title{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-faint);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;}
+  .skill-chip{
+    display:flex;justify-content:space-between;
+    font-size:13px;
+    padding:5px 0;
+    color:var(--text-dim);
+  }
+  .skill-chip span:last-child{color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12.5px;}
+  .no-skills{color:var(--text-faint);font-size:12.5px;font-style:italic;}
+
+  /* Recommendation */
+  .reco{
+    margin-top:28px;
+    background:linear-gradient(135deg, rgba(245,197,24,0.08), rgba(245,197,24,0.02));
+    border:1px solid rgba(245,197,24,0.35);
+    border-radius:var(--radius);
+    padding:22px 24px;
+  }
+  .reco-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+  .reco-main{font-family:'Bebas Neue',sans-serif;font-size:26px;margin:0 0 10px;letter-spacing:.01em;}
+  .reco-body{color:var(--text-dim);font-size:14px;line-height:1.6;}
+  .reco-body b{color:var(--text);}
+  .reco.dominant-reco{
+    background:linear-gradient(135deg, rgba(74,222,128,0.10), rgba(74,222,128,0.02));
+    border-color:rgba(74,222,128,0.4);
+  }
+  .reco.dominant-reco .reco-eyebrow{color:var(--good);}
+  .reco.tradeoff-reco{
+    background:linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+    border-color:var(--line);
+  }
+  .reco.tradeoff-reco .reco-eyebrow{color:var(--text-dim);}
+
+  /* Pros/Cons */
+  .pc-grid{
+    margin-top:28px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:16px;
+  }
+  .pc-card{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px 20px;
+  }
+  .pc-card h3{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:20px;font-weight:400;
+    margin:0 0 12px;letter-spacing:.01em;
+  }
+  .pc-list{list-style:none;margin:0;padding:0;}
+  .pc-list li{
+    font-size:13.5px;color:var(--text-dim);
+    padding:6px 0 6px 20px;
+    position:relative;
+  }
+  .pc-list li.pro::before{content:'▲';color:var(--good);position:absolute;left:0;font-size:9px;top:9px;}
+  .pc-list li.con::before{content:'▼';color:var(--bad);position:absolute;left:0;font-size:9px;top:9px;}
+
+  /* Roster browser */
+  .roster-section{margin-top:64px;}
+
+  /* Landing menu */
+  .menu{margin-top:36px;margin-bottom:8px;}
+  .menu-title{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:22px;letter-spacing:.01em;color:var(--text-dim);
+    margin:0 0 14px;
+  }
+  .menu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;}
+  .menu-card{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px 16px;
+    text-align:left;
+    cursor:pointer;
+    display:flex;flex-direction:column;gap:6px;
+    transition:border-color .15s, transform .15s;
+    font-family:'Inter',sans-serif;
+    color:var(--text);
+  }
+  .menu-card:hover{border-color:var(--gold);transform:translateY(-2px);}
+  .menu-icon{font-size:22px;}
+  .menu-label{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:.01em;}
+  .menu-desc{font-size:12.5px;color:var(--text-faint);}
+  .menu-card-soon{opacity:0.5;cursor:not-allowed;}
+  .menu-card-soon:hover{border-color:var(--line);transform:none;}
+
+  /* Leaderboard list */
+  .lb-row{
+    display:flex;align-items:center;gap:14px;
+    padding:12px 16px;
+    border-bottom:1px solid rgba(42,38,55,0.5);
+  }
+  .lb-row:last-child{border-bottom:none;}
+  .lb-rank{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:20px;color:var(--text-faint);
+    width:28px;text-align:right;flex-shrink:0;
+  }
+  .lb-row:nth-child(1) .lb-rank{color:var(--gold);}
+  .lb-row:nth-child(2) .lb-rank{color:#d5d5d5;}
+  .lb-row:nth-child(3) .lb-rank{color:#c98a4b;}
+  .lb-name{font-weight:600;flex:1 1 140px;min-width:100px;}
+  .lb-tags{display:flex;gap:6px;flex-shrink:0;}
+  .lb-value{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px;color:var(--gold);
+    flex-shrink:0;
+    min-width:90px;text-align:right;
+  }
+
+  /* Team builder */
+  .tb-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+  .tb-chip{
+    background:var(--bg-panel-2);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:6px 8px 6px 14px;
+    font-size:13px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .tb-chip button{
+    background:none;border:none;color:var(--text-faint);cursor:pointer;
+    font-size:15px;line-height:1;padding:2px 4px;border-radius:50%;
+  }
+  .tb-chip button:hover{color:var(--bad);}
+  .lineup-block{margin-top:32px;}
+  .lineup-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px;}
+  .lineup-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:.01em;margin:0;}
+  .genre-badge{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:.05em;text-transform:uppercase;
+    padding:4px 10px;border-radius:6px;
+    background:rgba(245,197,24,0.12);color:var(--gold);border:1px solid rgba(245,197,24,0.35);
+  }
+  .lineup-note{font-size:13px;color:var(--text-dim);margin:0 0 14px;}
+  .lineup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;}
+  .lu-card{
+    background:var(--bg-panel);border:1px solid var(--line);border-radius:12px;padding:14px;
+  }
+  .lu-name{font-family:'Bebas Neue',sans-serif;font-size:19px;margin-bottom:6px;}
+  .lu-role{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.05em;
+    color:var(--text-faint);margin-bottom:8px;
+  }
+  .lu-stat{font-size:12px;color:var(--text-dim);}
+  .lu-warn{
+    margin-top:8px;font-size:11px;color:#f5a623;
+    background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.3);
+    border-radius:6px;padding:4px 7px;
+  }
+
+  /* PEAK sentence-style input row */
+  .pk-input-row{
+    display:flex;flex-wrap:wrap;align-items:center;gap:9px;
+    background:var(--bg-panel);border:1px solid var(--line);
+    border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;
+  }
+  .pk-lbl{color:var(--text-dim);font-size:14px;}
+  .pk-num{
+    width:76px;text-align:center;
+    background:var(--bg-panel-2);border:1.5px solid var(--line);color:var(--text);
+    padding:9px 10px;border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:14px;
+  }
+  .pk-num:focus{border-color:var(--gold);outline:none;}
+  .pk-name{
+    width:130px;
+    background:var(--bg-panel-2);border:1.5px solid var(--line);color:var(--text);
+    padding:9px 11px;border-radius:8px;font-family:'Inter',sans-serif;font-size:13.5px;
+  }
+  .pk-name:focus{border-color:var(--gold);outline:none;}
+  .pk-name::placeholder{color:var(--text-faint);font-style:italic;}
+  /* Hide browser spinner arrows — typing is clearer here */
+  .pk-num::-webkit-outer-spin-button,
+  .pk-num::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .pk-num{-moz-appearance:textfield;appearance:textfield;}
+
+  /* Multi-column unlock grid (cuts down the long single-column list) */
+  .tb-multicol{
+    column-count:1;column-gap:20px;
+    border:1px solid var(--line);border-radius:var(--radius);
+    background:var(--bg-panel);padding:6px 16px;
+  }
+  @media (min-width:640px){ .tb-multicol{column-count:2;} }
+  @media (min-width:960px){ .tb-multicol{column-count:3;} }
+  .tb-unlock-row{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:8px 4px;border-bottom:1px solid rgba(42,38,55,0.5);
+    break-inside:avoid;font-size:13.5px;
+  }
+  .tb-unlock-row .name-genre{display:flex;align-items:center;gap:6px;overflow:hidden;}
+  .tb-unlock-row .name-genre span:first-child{color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .roster-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;}
+  .roster-title{font-family:'Bebas Neue',sans-serif;font-size:26px;margin:0;letter-spacing:.01em;}
+  .roster-controls{display:flex;gap:8px;flex-wrap:wrap;}
+  select, .roster-search{
+    background:var(--bg-panel);
+    border:1.5px solid var(--line);
+    color:var(--text);
+    padding:9px 12px;
+    border-radius:8px;
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    outline:none;
+  }
+  select:focus,.roster-search:focus{border-color:var(--gold);}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  thead th{
+    text-align:left;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--text-faint);
+    padding:10px 12px;
+    border-bottom:1px solid var(--line);
+    cursor:pointer;
+    user-select:none;
+    white-space:nowrap;
+  }
+  thead th:hover{color:var(--gold);}
+  tbody td{padding:10px 12px;border-bottom:1px solid rgba(42,38,55,0.5);color:var(--text-dim);}
+  tbody tr:hover{background:rgba(255,255,255,0.02);}
+  tbody td:first-child{color:var(--text);font-weight:600;}
+  .genre-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;}
+  .roster-add{
+    background:none;border:1px solid var(--line);color:var(--text-dim);
+    font-size:11px;padding:4px 9px;border-radius:6px;cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .roster-add:hover{border-color:var(--gold);color:var(--gold);}
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg-panel);}
+
+  footer{margin-top:60px;text-align:center;color:var(--text-faint);font-size:12px;}
+
+  /* Page navigation */
+  .page{display:none;}
+  .page.active{display:block;}
+
+  /* Compare ranking */
+  .rank-box{
+    margin-top:24px;background:var(--bg-panel);border:1px solid var(--line);
+    border-radius:var(--radius);padding:16px 18px;
+  }
+  .rank-row{
+    display:flex;align-items:center;gap:10px;
+    padding:8px 0;border-bottom:1px solid rgba(42,38,55,0.5);
+  }
+  .rank-row:last-of-type{border-bottom:none;}
+  .rank-num{
+    font-family:'Bebas Neue',sans-serif;font-size:19px;color:var(--text-faint);
+    width:22px;text-align:right;flex-shrink:0;
+  }
+  .rank-row:first-of-type .rank-num{color:var(--gold);}
+  .rank-name{font-weight:600;flex:1;}
+  .rank-fit{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;
+    letter-spacing:.05em;color:var(--good);
+    background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.3);
+    padding:3px 7px;border-radius:5px;
+  }
+
+  /* Collapsible explanation under each lineup */
+  .why{margin:0 0 12px;}
+  .why summary{
+    cursor:pointer;list-style:none;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--text-faint);
+    display:inline-flex;align-items:center;gap:6px;padding:2px 0;
+  }
+  .why summary::-webkit-details-marker{display:none;}
+  .why summary::before{content:'+';font-size:13px;line-height:1;}
+  .why[open] summary::before{content:'\2212';}
+  .why summary:hover{color:var(--gold);}
+  .why p{
+    margin:8px 0 0;font-size:13.5px;line-height:1.55;color:var(--text-dim);
+    border-left:2px solid var(--line);padding-left:12px;
+  }
+
+  /* Clickable girl name -> skill popover */
+  .girl-tag{cursor:pointer;user-select:none;}
+  .girl-tag:hover{filter:brightness(1.35);}
+  .girl-tag.open{background:rgba(255,255,255,0.10);}
+  #girlPop{
+    position:absolute;z-index:200;display:none;
+    min-width:220px;max-width:280px;
+    background:var(--bg-panel-2);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px 16px;
+    box-shadow:0 14px 40px rgba(0,0,0,0.65);
+  }
+  #girlPop .gp-name{
+    font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.01em;margin-bottom:2px;
+  }
+  #girlPop .gp-meta{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.05em;
+    text-transform:uppercase;color:var(--text-faint);margin-bottom:10px;
+  }
+  #girlPop .gp-row{
+    display:flex;justify-content:space-between;gap:14px;
+    font-size:13px;padding:5px 0;border-bottom:1px solid rgba(42,38,55,0.6);
+  }
+  #girlPop .gp-row:last-child{border-bottom:none;}
+  #girlPop .gp-row span:first-child{color:var(--text-dim);}
+  #girlPop .gp-row span:last-child{color:var(--text);font-family:'IBM Plex Mono',monospace;}
+  #girlPop .gp-none{font-size:12.5px;color:var(--text-faint);font-style:italic;}
+
+  /* Team stat bars — a total against what's actually reachable, so you can see
+     a team's shape without doing arithmetic */
+  .stat-bar{margin:9px 0;}
+  .stat-bar-top{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:5px;}
+  .stat-bar-top span{color:var(--text-dim);}
+  .stat-bar-top b{font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--text);}
+  .stat-bar-track{height:6px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden;}
+  .stat-bar-track i{display:block;height:100%;width:0;border-radius:99px;
+    transition:width 1s cubic-bezier(.2,.8,.2,1);}
+
+  /* Team total, counted up on arrival */
+  .team-total{margin:4px 0 2px;}
+  .tt-num{display:block;font-family:'Bebas Neue',sans-serif;font-size:34px;line-height:1.05;letter-spacing:.01em;}
+  .tt-lbl{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-faint);margin-top:1px;}
+
+  /* Lineup blocks arrive in sequence, and carry a wash of their genre colour */
+  .glow-block{position:relative;overflow:hidden;}
+  .glow-block::before{
+    content:'';position:absolute;inset:-70% -30% auto -30%;height:170px;pointer-events:none;
+    background:radial-gradient(ellipse at 50% 0%, var(--tint) 0%, transparent 70%);
+    opacity:0.13;
+  }
+  .glow-block > *{position:relative;}
+  .lineup-block{opacity:0;transform:translateY(8px);animation:luRise .38s cubic-bezier(.2,.8,.2,1) forwards;}
+  .lineup-block:nth-of-type(2){animation-delay:.06s;}
+  .lineup-block:nth-of-type(3){animation-delay:.12s;}
+  .lineup-block:nth-of-type(4){animation-delay:.18s;}
+  .lineup-block:nth-of-type(n+5){animation-delay:.24s;}
+  @keyframes luRise{to{opacity:1;transform:translateY(0);}}
+
+  /* Landing header breathes — two very slow colour clouds */
+  .hero-drift{position:relative;overflow:hidden;}
+  .hero-drift::after{
+    content:'';position:absolute;inset:-45%;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(circle at 25% 30%, var(--edm) 0%, transparent 55%),
+      radial-gradient(circle at 74% 64%, var(--rnb) 0%, transparent 58%);
+    opacity:0.14;filter:blur(52px);
+    animation:heroDrift 26s ease-in-out infinite alternate;
+  }
+  .hero-drift > *{position:relative;z-index:1;}
+  @keyframes heroDrift{
+    0%{transform:translate(0,0) scale(1);}
+    50%{transform:translate(5%,-4%) scale(1.12);}
+    100%{transform:translate(-4%,5%) scale(1.05);}
+  }
+
+  /* Anyone who turns motion off in their OS gets the static version */
+  @media (prefers-reduced-motion: reduce){
+    .lineup-block{opacity:1;transform:none;animation:none;}
+    .hero-drift::after{animation:none;}
+    .stat-bar-track i{transition:none;}
+  }
+
+  /* Fine grain over the page — large flat dark areas read as a blank screen;
+     this gives the black some substance without being consciously visible */
+  body::after{
+    content:'';position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.055'/%3E%3C/svg%3E");
+  }
+  .wrap{position:relative;z-index:2;}
+
+  /* Compare tab bars — the team blocks got bars, so this tab needs them too or
+     it's the one screen still looking like the old design */
+  .cmp-bar{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:12px;}
+  .cmp-bar em{width:74px;color:var(--text-dim);font-style:normal;font-size:11.5px;}
+  .cmp-track{flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden;}
+  .cmp-track i{display:block;height:100%;width:0;border-radius:99px;
+    transition:width .9s cubic-bezier(.2,.8,.2,1);}
+  .cmp-bar b{width:40px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:11.5px;}
+
+  /* Empty states point somewhere instead of just reporting nothing */
+  .empty-state{text-align:center;padding:30px 16px;}
+  .empty-state .es-mark{
+    width:44px;height:44px;margin:0 auto 12px;border-radius:12px;
+    border:1.5px dashed var(--line);display:flex;align-items:center;justify-content:center;
+  }
+  .empty-state b{display:block;font-family:'Bebas Neue',sans-serif;font-size:20px;
+    letter-spacing:.01em;margin-bottom:4px;}
+  .empty-state span{color:var(--text-dim);font-size:13px;}
+
+  /* Leaderboards are a ranking, so the top should look like one */
+  .lb-medal{display:inline-block;width:5px;height:17px;border-radius:99px;
+    background:var(--gold);opacity:.85;vertical-align:middle;margin-right:8px;}
+  .lb-medal.s2{opacity:.5;} .lb-medal.s3{opacity:.3;}
+  .lb-medal.none{background:transparent;}
+  .lb-row.lb-top{background:linear-gradient(90deg, rgba(245,197,24,.06), transparent 60%);}
+  .lb-row.lb-top .lb-rank{color:var(--gold);}
+
+  /* Genre wash for single-genre views (Compare, Leaderboards, Harmony). Not
+     used on Build my team, where several genres show at once and it would
+     fight the per-block glow. */
+  .genre-wash{position:relative;}
+  .genre-wash::before{
+    content:'';position:absolute;inset:-18px -18px auto -18px;height:280px;pointer-events:none;
+    background:linear-gradient(180deg, var(--wash-tint, transparent), transparent 62%);
+    opacity:.85;border-radius:var(--radius);
+  }
+  .genre-wash > *{position:relative;}
+
+  /* --- Opening sequence. Plays once, on first paint. --- */
+
+  /* A stage light crosses the title once */
+  .spot{position:relative;display:inline-block;}
+  .spot::after{
+    content:'';position:absolute;inset:-14px -30px;pointer-events:none;
+    background:linear-gradient(105deg,transparent 30%,rgba(245,197,24,.26) 48%,
+               rgba(255,255,255,.13) 54%,transparent 72%);
+    transform:translateX(-130%);
+  }
+  .spot.go::after{animation:sweep 1.25s cubic-bezier(.4,0,.2,1) forwards;}
+  @keyframes sweep{to{transform:translateX(130%);}}
+
+  /* The title rises from behind a mask rather than fading */
+  .mask-line{display:block;overflow:hidden;}
+  .mask-line > span{display:block;transform:translateY(105%);}
+  .mask-line.go > span{animation:maskUp .72s cubic-bezier(.16,1,.3,1) forwards;}
+  @keyframes maskUp{to{transform:translateY(0);}}
+
+  /* Bars bounce once under the header, then stay as a divider */
+  .eq{display:flex;align-items:flex-end;gap:4px;height:26px;margin:14px 0 0;}
+  .eq b{width:4px;border-radius:99px;height:3px;opacity:.5;background:var(--text-dim);}
+  .eq b:nth-child(3n){opacity:.72;background:var(--edm);}
+  .eq.go b{animation:bop .95s cubic-bezier(.3,.9,.3,1) forwards;}
+  .eq.go b:nth-child(1){animation-delay:0s;}    .eq.go b:nth-child(2){animation-delay:.04s;}
+  .eq.go b:nth-child(3){animation-delay:.08s;}  .eq.go b:nth-child(4){animation-delay:.12s;}
+  .eq.go b:nth-child(5){animation-delay:.16s;}  .eq.go b:nth-child(6){animation-delay:.2s;}
+  .eq.go b:nth-child(7){animation-delay:.24s;}  .eq.go b:nth-child(8){animation-delay:.28s;}
+  .eq.go b:nth-child(9){animation-delay:.32s;}  .eq.go b:nth-child(10){animation-delay:.36s;}
+  .eq.go b:nth-child(11){animation-delay:.4s;}  .eq.go b:nth-child(12){animation-delay:.44s;}
+  @keyframes bop{0%{height:3px;}35%{height:21px;}60%{height:8px;}80%{height:14px;}100%{height:4px;}}
+
+  /* Menu cards arrive like a hand being dealt */
+  .menu-grid .menu-card{opacity:0;transform:translateY(24px) rotate(-4deg) scale(.96);}
+  .menu-grid.dealt .menu-card{animation:deal .5s cubic-bezier(.2,.9,.25,1.1) forwards;}
+  .menu-grid.dealt .menu-card:nth-child(2){animation-delay:.06s;}
+  .menu-grid.dealt .menu-card:nth-child(3){animation-delay:.12s;}
+  .menu-grid.dealt .menu-card:nth-child(4){animation-delay:.18s;}
+  .menu-grid.dealt .menu-card:nth-child(5){animation-delay:.24s;}
+  .menu-grid.dealt .menu-card:nth-child(6){animation-delay:.3s;}
+  .menu-grid.dealt .menu-card:nth-child(7){animation-delay:.36s;}
+  @keyframes deal{to{opacity:1;transform:translateY(0) rotate(0) scale(1);}}
+
+  /* A page grows out of the card you tapped, so you can see where you went */
+  .page.growing{
+    transform-origin:var(--ox,50%) var(--oy,50%);
+    animation:growIn .4s cubic-bezier(.2,.85,.25,1) forwards;
+  }
+  @keyframes growIn{from{opacity:0;transform:scale(.3);}to{opacity:1;transform:scale(1);}}
+
+  @media (prefers-reduced-motion: reduce){
+    .spot.go::after{animation:none;}
+    .mask-line > span{transform:none;animation:none;}
+    .eq.go b{animation:none;}
+    .menu-grid .menu-card{opacity:1;transform:none;animation:none;}
+    .page.growing{animation:none;}
+  }
+
+  /* Stat primer on landing */
+  .primer{
+    margin-top:32px;
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px 20px;
+  }
+  .primer-title{
+    font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:.01em;
+    margin:0 0 12px;color:var(--text-dim);
+  }
+  .primer-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:9px 20px;
+    font-size:13px;color:var(--text-faint);line-height:1.5;
+  }
+  .primer-grid b{color:var(--text);}
+  .back-btn{
+    background:none;border:1px solid var(--line);color:var(--text-dim);
+    padding:9px 16px;border-radius:8px;font-family:'Inter',sans-serif;font-size:13.5px;font-weight:600;
+    cursor:pointer;margin-bottom:20px;
+  }
+  .back-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+  @media (max-width:640px){
+    .wrap{padding:24px 14px 60px;}
+    .roster-head{flex-direction:column;align-items:flex-start;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero-drift">
+    <div class="spot" id="heroSpot">
+      <span class="mask-line" id="heroTitle"><span><h1>Idol Company Assistant</h1></span></span>
+    </div>
+    <p class="meta">Creator: Dank · Server: 706</p>
+    <p class="sub">Compare girls, see who tops each genre, and build your lineup.</p>
+    <div class="eq" id="heroEq" aria-hidden="true">
+      <b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b>
+    </div>
+  </header>
+
+  <div class="menu" id="landingMenu">
+    <p class="menu-title">How can I help?</p>
+    <div class="menu-grid">
+      <button class="menu-card" data-target="teamBuilderSection">
+        <span class="menu-icon">🧩</span>
+        <span class="menu-label">Build my team</span>
+        <span class="menu-desc">Lineup suggestions from your unlocked girls</span>
+      </button>
+      <button class="menu-card" data-target="harmonySection">
+        <span class="menu-icon">🎼</span>
+        <span class="menu-label">Harmony assistant</span>
+        <span class="menu-desc">Who to assign to whom, and what it costs</span>
+      </button>
+      <button class="menu-card" data-target="levelSection">
+        <span class="menu-icon">⬆️</span>
+        <span class="menu-label">Levelling cost</span>
+        <span class="menu-desc">EXP needed to take a girl to any level</span>
+      </button>
+      <button class="menu-card" data-target="peakSection">
+        <span class="menu-icon">📈</span>
+        <span class="menu-label">PEAK assistant</span>
+        <span class="menu-desc">Most cost-effective way to spend your photos</span>
+      </button>
+      <button class="menu-card" data-target="compareSection">
+        <span class="menu-icon">⚖️</span>
+        <span class="menu-label">Compare girls</span>
+        <span class="menu-desc">Pick 2+ and see stats, skills, pros/cons</span>
+      </button>
+      <button class="menu-card" data-target="leaderboardSection">
+        <span class="menu-icon">🏆</span>
+        <span class="menu-label">Top girls by genre</span>
+        <span class="menu-desc">Leaderboards by genre, type, or skill</span>
+      </button>
+      <button class="menu-card" data-target="rosterPage">
+        <span class="menu-icon">📋</span>
+        <span class="menu-label">Browse full roster</span>
+        <span class="menu-desc">Search, sort, and filter everyone</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="primer">
+    <p class="primer-title">What actually matters in a fight</p>
+    <div class="primer-grid">
+      <div><b>Fans</b> — your health bar. First side to lose 20% of their fans loses the battle.</div>
+      <div><b>Sing + Dance</b> — your raw power, before any bonuses are applied.</div>
+      <div><b>Normal Attack</b> — extra damage every second of the fight.</div>
+      <div><b>Skill Damage</b> — boosts a big burst hit that lands every 11 seconds.</div>
+      <div><b>Reductions</b> — cut the damage coming back at you.</div>
+      <div><b>Genre bonus</b> — 3 girls of one genre gives +15% stats, 4 gives +20%, 5 gives +25%.</div>
+    </div>
+  </div>
+
+  <div id="compareSection" class="page">
+  <button class="back-btn">← Back to menu</button>
+  <div class="picker" id="picker"></div>
+  <div class="picker-btns" style="margin-top:12px;">
+    <button class="ghost" id="addSlotBtn">+ Add another girl</button>
+    <button class="ghost" id="clearBtn">Clear all</button>
+  </div>
+
+  <div id="emptyState" class="empty empty-state">
+    <b>No one selected yet.</b><br>Start typing a girl's name above to build your comparison.
+  </div>
+
+  <div id="mainGenreAsk" class="disclaimer" style="margin-top:20px;display:none;">
+    <b>Which genre is your main team?</b> Five girls of one genre gives your whole team +25% stats, so a girl who fits your main genre is often worth more than a stronger girl who doesn't.
+    <div class="picker-btns" id="mainGenreBtns" style="margin-top:10px;flex-wrap:wrap;"></div>
+  </div>
+
+  <div id="rankBox"></div>
+  <div id="compareGrid" class="compare-grid" style="display:none;"></div>
+  <div id="recoBox"></div>
+  <div id="pcGrid" class="pc-grid"></div>
+  </div>
+
+  <div class="roster-section page" id="leaderboardSection">
+    <button class="back-btn">← Back to menu</button>
+    <div class="roster-head">
+      <h2 class="roster-title">Top girls</h2>
+      <div class="roster-controls">
+        <select id="lbGenreFilter"><option value="">All genres</option></select>
+        <select id="lbTypeFilter"><option value="">All types</option></select>
+        <select id="lbMetric"></select>
+      </div>
+    </div>
+    <div id="lbList"></div>
+  </div>
+
+  <div class="roster-section page" id="teamBuilderSection">
+    <button class="back-btn">← Back to menu</button>
+    <div class="roster-head">
+      <h2 class="roster-title">Build my team</h2>
+    </div>
+    <p class="sub" style="margin-bottom:16px;">Tell me who you've unlocked and I'll suggest lineups for each mode. They're built differently on purpose — short Parking and P25 fights reward raw stats and Normal Attack, while rallies and HQ fights run for minutes and reward Skill Damage and staying power. Each suggestion explains what it's for.</p>
+
+    <div class="slot" style="max-width:420px;">
+      <input id="tbSearch" placeholder="Search & add a girl you've unlocked…" autocomplete="off">
+      <div class="suggestions" id="tbSuggestions"></div>
+    </div>
+    <div class="picker-btns" style="margin-top:10px;">
+      <button class="ghost" id="tbSelectAllBtn">Select all 90</button>
+      <button class="ghost" id="tbClearBtn">Clear</button>
+    </div>
+
+    <div id="tbChips" class="tb-chips"></div>
+
+    <p class="menu-title" style="font-size:17px;margin-top:28px;">Or browse by genre</p>
+    <div class="roster-controls" style="margin-bottom:10px;">
+      <select id="tbTableGenreFilter"><option value="">All genres</option></select>
+      <button class="ghost" data-sort="name">Sort: Name</button>
+      <button class="ghost" data-sort="genre">Sort: Genre</button>
+      <button class="ghost" id="tbSelectShownBtn">✓ Select all shown</button>
+      <button class="ghost" id="tbDeselectShownBtn">Deselect all shown</button>
+    </div>
+    <div id="tbTableBody" class="tb-multicol"></div>
+
+    <div id="tbEmpty" class="empty empty-state" style="margin-top:24px;">
+      <b>Add at least 5 unlocked girls</b><br>to get lineup suggestions.
+    </div>
+
+    <div id="rallyLeaderQ" class="disclaimer" style="margin-top:24px;display:none;">
+      <b>Are you the rally leader of your group?</b> Rally leaders usually run high stats and can afford to build around their main genre.
+      <div class="picker-btns" style="margin-top:10px;">
+        <button class="ghost" id="rlYesBtn">Yes, I lead rallies</button>
+        <button class="ghost" id="rlNoBtn">No</button>
+      </div>
+      <div id="rlGenreWrap" style="display:none;margin-top:14px;">
+        <b>Which genre is your main team?</b>
+        <div class="picker-btns" id="rlGenreBtns" style="margin-top:8px;flex-wrap:wrap;"></div>
+      </div>
+    </div>
+
+    <div id="tbResults" style="display:none;"></div>
+  </div>
+
+  <div class="roster-section page" id="harmonySection">
+    <button class="back-btn">← Back to menu</button>
+    <div class="roster-head">
+      <h2 class="roster-title">Harmony assistant</h2>
+    </div>
+    <p class="sub" style="margin-bottom:18px;">Harmony lets an abroad girl soak up extra Sing and Dance from other girls of her genre. It is expensive and the assistants are locked out of every other mode, so this only makes sense once you have girls spare. Uses the girls you ticked in <b>Build my team</b>.</p>
+
+    <div class="disclaimer" style="margin-bottom:18px;">
+      <b>Before you spend an SSR:</b> assign your decent R and SR girls first. They do nothing in a lineup anyway, so they cost you nothing — an SSR assistant costs you a team slot forever.
+    </div>
+
+    <div id="hmGenreQ">
+      <p class="menu-title" style="font-size:17px;">Which genre?</p>
+      <div class="picker-btns" id="hmGenreBtns" style="flex-wrap:wrap;margin-bottom:18px;"></div>
+    </div>
+
+    <p class="menu-title" style="font-size:17px;">Which team are you building around?</p>
+    <p class="lineup-note">Assistants are chosen to protect this lineup — the girls in it are never spent as fodder.</p>
+    <div class="picker-btns" id="hmTeamBtns" style="flex-wrap:wrap;margin-bottom:18px;"></div>
+
+    <div id="hmResults"></div>
+  </div>
+
+  <div class="roster-section page" id="peakSection">
+    <button class="back-btn">← Back to menu</button>
+    <div class="roster-head">
+      <h2 class="roster-title">PEAK assistant</h2>
+    </div>
+    <p class="sub" style="margin-bottom:20px;">Enter your maxed girls' current PEAK levels, pick which genres you want to push, and I'll work out the most photo-efficient upgrade order.</p>
+
+    <p class="menu-title" style="font-size:17px;">1. Your maxed girls' PEAK levels</p>
+    <p class="lineup-note">Group your maxed girls by the level they're sitting at, and add one group at a time. Only maxed girls can be PEAKed.<br>
+    <span style="color:var(--text-faint);">Naming is optional — skip it for bulk groups (e.g. <b>4 EDM girls at 10</b>), or name the ones you want called out by name in the plan (e.g. <b>Kokoro, EDM, 19</b>).</span></p>
+    <div class="pk-input-row">
+      <span class="pk-lbl">I have</span>
+      <input id="pkCountInput" class="pk-num" type="number" min="1" max="99" placeholder="4">
+      <select id="pkGenreSel"></select>
+      <span class="pk-lbl">girl(s) at PEAK level</span>
+      <input id="pkLevelInput" class="pk-num" type="number" min="0" placeholder="10">
+      <span class="pk-lbl">named</span>
+      <input id="pkNameInput" class="pk-name" type="text" placeholder="optional" autocomplete="off">
+      <button class="ghost" id="pkAddBtn">+ Add</button>
+      <button class="ghost" id="pkClearBtn">Clear all</button>
+    </div>
+    <div id="pkEntries" class="tb-chips"></div>
+    <div id="pkCurrentBuffs" style="margin-top:16px;"></div>
+
+    <div id="pkTargetQ">
+      <p class="menu-title" style="font-size:17px;margin-top:32px;">2. Which genres do you want to strengthen?</p>
+      <p class="lineup-note">Pick one for a focused main-genre push, or several to spread across teams.</p>
+      <div id="pkTargetGenres" class="picker-btns" style="flex-wrap:wrap;"></div>
+    </div>
+
+    <p class="menu-title" style="font-size:17px;margin-top:32px;">3. How many photos do you have to spend?</p>
+    <div class="picker-btns" style="align-items:center;">
+      <input id="pkBudget" type="number" min="0" step="1000" placeholder="e.g. 20000" style="width:180px;background:var(--bg-panel);border:1.5px solid var(--line);color:var(--text);padding:9px 12px;border-radius:8px;font-family:'Inter',sans-serif;font-size:13.5px;">
+      <span class="lineup-note" style="margin:0;">Leave blank to see the full plan with no budget limit.</span>
+    </div>
+
+    <div id="pkResults" style="margin-top:28px;"></div>
+  </div>
+
+  <div class="roster-section page" id="levelSection">
+    <button class="back-btn">← Back to menu</button>
+    <div class="roster-head"><h2 class="roster-title">Levelling cost</h2></div>
+    <p class="sub" style="margin-bottom:18px;">How much Artist EXP it takes to move a girl between levels. Newer girls cost more for the same levels — a season 6 girl needs double what a season 1 or 2 girl does.</p>
+
+    <div class="pk-input-row">
+      <span class="pk-lbl">Take</span>
+      <input id="lvGirl" class="pk-name" type="text" placeholder="girl's name" autocomplete="off" style="width:150px;">
+      <span class="pk-lbl">from level</span>
+      <input id="lvFrom" class="pk-num" type="number" min="1" max="159" placeholder="140">
+      <span class="pk-lbl">to</span>
+      <input id="lvTo" class="pk-num" type="number" min="2" max="160" placeholder="160">
+      <button class="ghost" id="lvGo">Work it out</button>
+    </div>
+    <div id="lvResult" style="margin-top:20px;"></div>
+
+  </div>
+
+  <div class="roster-section page" id="rosterPage">
+    <button class="back-btn">← Back to menu</button>
+    <div class="roster-head">
+      <h2 class="roster-title">Full roster (<span id="rosterCount">0</span>)</h2>
+      <div class="roster-controls">
+        <input class="roster-search" id="rosterSearch" placeholder="Search name…">
+        <select id="genreFilter"><option value="">All genres</option></select>
+        <select id="typeFilter"><option value="">All types</option></select>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th data-key="name">Girl</th>
+            <th data-key="genre">Genre</th>
+            <th data-key="type">Type</th>
+            <th data-key="sing">Sing</th>
+            <th data-key="dance">Dance</th>
+            <th data-key="total">Total</th>
+            <th>Skill highlights</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="rosterBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="girlPop"></div>
+
+  <div id="siteFooter" style="display:none;">
+    <p class="disclaimer-foot">Your unlocked girls and PEAK levels are saved in this browser, so you don't have to enter them again.
+      <button class="ghost" id="clearSavedBtn" style="font-size:12px;padding:5px 11px;margin-left:8px;">Clear saved data</button></p>
+    <p class="disclaimer-foot">Note: rankings here use stats and skill bonuses, not a full battle simulator — the real PvP damage formula is still being worked out, so treat "upgrade priority" as an estimate.</p>
+    <footer>Built from your team's roster sheet · stat-based comparison, PvP simulator pending formula confirmation</footer>
+  </div>
+</div>
+
+<script>
+const GIRLS = [{"genre": "EDM", "type": "Vocalist", "name": "Alice", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "EDM", "type": "Center", "name": "Anya", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": "200 /s to GC/Club/LM", "dmgDefending": null, "map": "Anniversary", "season": null}, {"genre": "EDM", "type": "Vocalist", "name": "Aoi", "sing": 52855, "dance": 27229, "total": 80084, "skillDmgUp": 0.36, "normalDmgUp": 0.36, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 6}, {"genre": "EDM", "type": "Vocalist", "name": "Aurelia", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": 0.24, "normalDmgUp": 0.24, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 2}, {"genre": "EDM", "type": "Dancer", "name": "Caroline", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": "200 /s to GC/Club/LM", "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "EDM", "type": "Center", "name": "Cindy", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": 0.2, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "EDM", "type": "Center", "name": "Everly", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": 0.2, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "EDM", "type": "Center", "name": "Flora", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 3}, {"genre": "EDM", "type": "Center", "name": "Kokoro", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 1}, {"genre": "EDM", "type": "Center", "name": "Longkui", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": 0.6, "normalDmgUp": 0.3, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Stock Auction", "season": null}, {"genre": "EDM", "type": "Vocalist", "name": "Margot", "sing": 36691, "dance": 18345, "total": 55036, "skillDmgUp": 0.28, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.14, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 4}, {"genre": "EDM", "type": "Dancer", "name": "Miyuki", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": null, "normalDmgUp": 0.6, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 2}, {"genre": "EDM", "type": "Dancer", "name": "Momona", "sing": 22691, "dance": 44047, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.16, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 5}, {"genre": "EDM", "type": "Vocalist", "name": "Natasha", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "EDM", "type": "Vocalist", "name": "Rin", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": 0.24, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 3}, {"genre": "EDM", "type": "Center", "name": "Rio", "sing": 33369, "dance": 33369, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.16, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 5}, {"genre": "EDM", "type": "Vocalist", "name": "Sari", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 1}, {"genre": "EDM", "type": "Center", "name": "Xenia", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 1}, {"genre": "HipHop", "type": "Center", "name": "Arashi", "sing": 33369, "dance": 33369, "total": 66738, "skillDmgUp": 0.32, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 5}, {"genre": "HipHop", "type": "Center", "name": "Audrey", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "HipHop", "type": "Dancer", "name": "Avery", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Ayaka", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 1}, {"genre": "HipHop", "type": "Vocalist", "name": "Bella", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Claudius", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": 0.48, "normalDmgUp": 0.48, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 3}, {"genre": "HipHop", "type": "Vocalist", "name": "Daphne", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 1}, {"genre": "HipHop", "type": "Dancer", "name": "Elame", "sing": 22691, "dance": 44047, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.16, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 5}, {"genre": "HipHop", "type": "Dancer", "name": "Elara", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "HipHop", "type": "Center", "name": "Haruki", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": null, "normalDmgUp": 0.6, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 2}, {"genre": "HipHop", "type": "Center", "name": "Hestia", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "HipHop", "type": "Vocalist", "name": "Kalani", "sing": 52855, "dance": 27229, "total": 80084, "skillDmgUp": null, "normalDmgUp": 0.9, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 6}, {"genre": "HipHop", "type": "Vocalist", "name": "Kendall", "sing": 36691, "dance": 18345, "total": 55036, "skillDmgUp": 0.28, "normalDmgUp": 0.28, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.14, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 4}, {"genre": "HipHop", "type": "Dancer", "name": "Leilani", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 1}, {"genre": "HipHop", "type": "Vocalist", "name": "Marina", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": "240 /s to GC/Club/LM", "dmgDefending": null, "map": "Bali", "season": 3}, {"genre": "HipHop", "type": "Dancer", "name": "Megan", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "HipHop", "type": "Dancer", "name": "Mio", "sing": 18345, "dance": 36691, "total": 55036, "skillDmgUp": null, "normalDmgUp": 0.7, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 4}, {"genre": "HipHop", "type": "Dancer", "name": "Ningsih", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": "240 /s to Company HQ", "dmgDefending": null, "map": "Bali", "season": 2}, {"genre": "HipHop", "type": "Vocalist", "name": "Rhea", "sing": 42400, "dance": 24300, "total": 66700, "skillDmgUp": 0.4, "normalDmgUp": 0.4, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.2, "dmgAttacking": null, "dmgDefending": null, "map": "Stock Auction", "season": null}, {"genre": "Pop", "type": "Center", "name": "Ariadne", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 1}, {"genre": "Pop", "type": "Center", "name": "Aurora", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "Pop", "type": "Vocalist", "name": "Brooklyn", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": "200 /s", "map": "Burj", "season": null}, {"genre": "Pop", "type": "Center", "name": "Chizuru", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": 0.2, "normalDmgUp": 0.2, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 1}, {"genre": "Pop", "type": "Center", "name": "Diah", "sing": 40042, "dance": 40042, "total": 80084, "skillDmgUp": 0.36, "normalDmgUp": 0.9, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 6}, {"genre": "Pop", "type": "Center", "name": "Elawa", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "Pop", "type": "Center", "name": "Isla", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": 0.24, "normalDmgUp": 0.24, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 3}, {"genre": "Pop", "type": "Dancer", "name": "Hana", "sing": 22691, "dance": 44047, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 5}, {"genre": "Pop", "type": "Vocalist", "name": "Layla", "sing": 44047, "dance": 22691, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 5}, {"genre": "Pop", "type": "Vocalist", "name": "Moana", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 1}, {"genre": "Pop", "type": "Center", "name": "Monica", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": 0.6, "normalDmgUp": 0.6, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Stock Auction", "season": null}, {"genre": "Pop", "type": "Center", "name": "Octavia", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": "240 /s to Company HQ", "dmgDefending": null, "map": "Rome", "season": 2}, {"genre": "Pop", "type": "Vocalist", "name": "Restari", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": "240 /s", "map": "Bali", "season": 2}, {"genre": "Pop", "type": "Vocalist", "name": "Rosemary", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "Pop", "type": "Center", "name": "Ruby", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": 0.2, "normalDmgUp": 0.7, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "Pop", "type": "Dancer", "name": "Savannah", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": "200 /s to Company HQ", "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "Pop", "type": "Center", "name": "Sloane", "sing": 27808, "dance": 27808, "total": 55616, "skillDmgUp": 0.56, "normalDmgUp": 0.28, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 4}, {"genre": "Pop", "type": "Vocalist", "name": "Yumeno", "sing": 36691, "dance": 18345, "total": 55036, "skillDmgUp": 0.28, "normalDmgUp": 0.28, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 4}, {"genre": "R&B", "type": "Center", "name": "Ayane", "sing": 27808, "dance": 27808, "total": 55616, "skillDmgUp": null, "normalDmgUp": 0.7, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.14, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 4}, {"genre": "R&B", "type": "Dancer", "name": "Cornelia", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": "240 /s", "map": "Rome", "season": 2}, {"genre": "R&B", "type": "Center", "name": "Dewi", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": 0.24, "normalDmgUp": 0.6, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 2}, {"genre": "R&B", "type": "Vocalist", "name": "Eirene", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 1}, {"genre": "R&B", "type": "Dancer", "name": "Eri", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 1}, {"genre": "R&B", "type": "Vocalist", "name": "Julia", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "R&B", "type": "Vocalist", "name": "Kesnia", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "R&B", "type": "Center", "name": "Nephthys", "sing": 33369, "dance": 33369, "total": 66738, "skillDmgUp": 0.24, "normalDmgUp": 0.24, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.16, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 5}, {"genre": "R&B", "type": "Center", "name": "Nora", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "R&B", "type": "Dancer", "name": "Nova", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": "200 /s", "map": "Burj", "season": null}, {"genre": "R&B", "type": "Dancer", "name": "Ratih", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 1}, {"genre": "R&B", "type": "Vocalist", "name": "Rena", "sing": 44047, "dance": 22691, "total": 66738, "skillDmgUp": 0.32, "normalDmgUp": 0.32, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 5}, {"genre": "R&B", "type": "Dancer", "name": "Shiori", "sing": 27229, "dance": 52855, "total": 80084, "skillDmgUp": null, "normalDmgUp": 0.9, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 6}, {"genre": "R&B", "type": "Vocalist", "name": "Sora", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 1}, {"genre": "R&B", "type": "Dancer", "name": "Valentina", "sing": 18345, "dance": 36691, "total": 55036, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": 0.14, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 4}, {"genre": "R&B", "type": "Center", "name": "Zendaya", "sing": 9086, "dance": 15861, "total": 24947, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "Rock", "type": "Dancer", "name": "Antonia", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": 0.24, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.12, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 3}, {"genre": "Rock", "type": "Dancer", "name": "Calliope", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 1}, {"genre": "Rock", "type": "Center", "name": "Claire", "sing": 16094, "dance": 16094, "total": 32188, "skillDmgUp": 0.2, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "Rock", "type": "Center", "name": "Hikari", "sing": 23175, "dance": 23175, "total": 46350, "skillDmgUp": 0.24, "normalDmgUp": 0.24, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 3}, {"genre": "Rock", "type": "Dancer", "name": "Keisha", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": 0.24, "normalDmgUp": 0.84, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Anniversary", "season": null}, {"genre": "Rock", "type": "Vocalist", "name": "Kelly", "sing": 24553, "dance": 14071, "total": 38624, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "Rock", "type": "Center", "name": "Mellissa", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "Rock", "type": "Vocalist", "name": "Momosaki", "sing": 44047, "dance": 22691, "total": 66738, "skillDmgUp": null, "normalDmgUp": 0.8, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 5}, {"genre": "Rock", "type": "Dancer", "name": "Paisley", "sing": 11726, "dance": 20461, "total": 32187, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": 0.12, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "Rock", "type": "Vocalist", "name": "Riku", "sing": 29463, "dance": 16885, "total": 46348, "skillDmgUp": 0.24, "normalDmgUp": 0.24, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 2}, {"genre": "Rock", "type": "Center", "name": "Sienna", "sing": 27808, "dance": 27808, "total": 55616, "skillDmgUp": 0.28, "normalDmgUp": 0.28, "skillDmgReduce": 0.12, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 4}, {"genre": "Rock", "type": "Vocalist", "name": "Skylar", "sing": 20461, "dance": 11726, "total": 32187, "skillDmgUp": 0.2, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Burj", "season": null}, {"genre": "Rock", "type": "Center", "name": "Talia", "sing": 19313, "dance": 19313, "total": 38626, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 1}, {"genre": "Rock", "type": "Dancer", "name": "Tanya", "sing": 27229, "dance": 52855, "total": 80084, "skillDmgUp": null, "normalDmgUp": 0.9, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.18, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Bali", "season": 6}, {"genre": "Rock", "type": "Dancer", "name": "Valerie", "sing": 18345, "dance": 36691, "total": 55036, "skillDmgUp": 0.28, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Rome", "season": 4}, {"genre": "Rock", "type": "Vocalist", "name": "Vesper", "sing": 24600, "dance": 14100, "total": 38700, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.1, "rallyCapUp": 0.1, "dmgAttacking": null, "dmgDefending": null, "map": "Discord Community", "season": null}, {"genre": "Rock", "type": "Dancer", "name": "Vivian", "sing": 16885, "dance": 29463, "total": 46348, "skillDmgUp": null, "normalDmgUp": null, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": "240 /s", "map": "Bali", "season": 3}, {"genre": "Rock", "type": "Center", "name": "Yukine", "sing": 40042, "dance": 40042, "total": 80084, "skillDmgUp": null, "normalDmgUp": 0.9, "skillDmgReduce": null, "normalDmgReduce": null, "fanCapUp": 0.18, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 6}, {"genre": "Rock", "type": "Dancer", "name": "Yuuko", "sing": 14071, "dance": 24553, "total": 38624, "skillDmgUp": null, "normalDmgUp": 0.5, "skillDmgReduce": null, "normalDmgReduce": 0.12, "fanCapUp": null, "rallyCapUp": null, "dmgAttacking": null, "dmgDefending": null, "map": "Tokyo", "season": 1}];
+
+const GENRE_COLOR = {
+  'Rock':'var(--rock)','R&B':'var(--rnb)','Pop':'var(--pop)','HipHop':'var(--hiphop)','EDM':'var(--edm)'
+};
+const SKILL_FIELDS = [
+  {key:'skillDmgUp', label:'Skill Dmg +', fmt:pct},
+  {key:'normalDmgUp', label:'Normal Dmg +', fmt:pct},
+  {key:'skillDmgReduce', label:'Skill Dmg Taken −', fmt:pct},
+  {key:'normalDmgReduce', label:'Normal Dmg Taken −', fmt:pct},
+  {key:'fanCapUp', label:'Fan Cap +', fmt:pct},
+  {key:'rallyCapUp', label:'Rally Cap +', fmt:pct},
+  {key:'dmgAttacking', label:'Dmg (Attacking)', fmt:raw},
+  {key:'dmgDefending', label:'Dmg (Defending)', fmt:raw},
+];
+
+function pct(v){ return (v*100).toFixed(0)+'%'; }
+function raw(v){ return String(v); }
+function has(v){ return v !== null && v !== undefined; }
+
+const MAX_SING = Math.max(...GIRLS.map(g=>g.sing));
+const MAX_DANCE = Math.max(...GIRLS.map(g=>g.dance));
+const MAX_TOTAL = Math.max(...GIRLS.map(g=>g.total));
+
+// Skill values are measured on a COMMON scale — one percentage point of a
+// skill is compared against one percentage point of another, weighted by how
+// much that skill actually does in a fight. The old approach divided each
+// skill by its own roster maximum, which badly distorted rare skills: both
+// reduction stats only ever appear at 12%, so any girl with one scored a
+// perfect 1.0, making +12% reduction look better than +50% Normal Attack.
+//
+// Relative worth of one percentage point (normal attack = 1.0 baseline).
+// These differ BY MODE because the fights are structurally different:
+//
+// SHORT fights (Parking Wars, P25) resolve in seconds, so a team may get one
+// skill pulse or none at all. These weights are fitted directly to 37 real
+// parking battle reports — the fit is clear-cut, and forcing skill damage
+// higher makes the predictions measurably worse.
+const PT_SHORT = {normalDmgUp:1.0, skillDmgUp:0.95, normalDmgReduce:0.5, skillDmgReduce:0.5};
+//
+// LONG fights (rallies, clubs, landmarks, HQ hits) run for minutes with
+// reinforcements, so many pulses land. The per-second battle log shows a pulse
+// hitting for 3.6x a normal tick at 24% Skill Bonus and 11.4x at 100%, so a
+// point of Skill Damage buys more than a point of Normal Attack once pulses
+// repeat. Skill Reduction matters more here too, since pulses are a big share
+// of incoming damage.
+const PT_LONG  = {normalDmgUp:1.0, skillDmgUp:1.6, normalDmgReduce:1.0, skillDmgReduce:0.9};
+
+function ptsWith(TBL, g, key){ return ((g[key]||0) * (TBL[key]||1)); }
+// Short-fight indices (parking / P25)
+function offenseShort(g){ return ptsWith(PT_SHORT,g,'skillDmgUp') + ptsWith(PT_SHORT,g,'normalDmgUp'); }
+function defenseShort(g){ return ptsWith(PT_SHORT,g,'skillDmgReduce') + ptsWith(PT_SHORT,g,'normalDmgReduce'); }
+// Long-fight indices (rally / siege / PvP)
+function offenseLong(g){ return ptsWith(PT_LONG,g,'skillDmgUp') + ptsWith(PT_LONG,g,'normalDmgUp'); }
+function defenseLong(g){ return ptsWith(PT_LONG,g,'skillDmgReduce') + ptsWith(PT_LONG,g,'normalDmgReduce'); }
+// Default (used by the compare tab, which isn't mode-specific) sits between the
+// two so a girl's headline ranking isn't biased toward either mode.
+const PT = {normalDmgUp:1.0, skillDmgUp:1.1, normalDmgReduce:0.75, skillDmgReduce:0.7};
+// Divisor keeps the resulting index in roughly 0..1 so existing weights still
+// behave: ~1.0 of raw skill points (e.g. 100% total bonuses) maps to 1.0.
+const SKILL_SCALE = 1.0;
+function pts(g, key){ return ((g[key]||0) * (PT[key]||1)) / SKILL_SCALE; }
+
+function offenseIndex(g){
+  return pts(g,'skillDmgUp') + pts(g,'normalDmgUp');
+}
+function defenseIndex(g){
+  return pts(g,'skillDmgReduce') + pts(g,'normalDmgReduce');
+}
+function versatility(g){
+  return SKILL_FIELDS.filter(f=>has(g[f.key])).length;
+}
+// Strict dominance: a dominates b if a is >= b on every stat/skill it has,
+// b has no skill a lacks, and a is strictly better on at least one thing.
+// This needs no formula — it's true regardless of how combat math works out.
+function dominance(a, b){
+  if(a.sing < b.sing || a.dance < b.dance) return null;
+  let strictlyBetter = a.sing > b.sing || a.dance > b.dance;
+  for(const f of SKILL_FIELDS){
+    const av = a[f.key], bv = b[f.key];
+    if(has(bv) && typeof bv === 'number'){
+      if(!has(av) || typeof av !== 'number' || av < bv) return null;
+      if(av > bv) strictlyBetter = true;
+    } else if(has(bv) && !has(av)){
+      return null; // b has a flat/text bonus a lacks entirely
+    }
+    if(has(av) && !has(bv)) strictlyBetter = true;
+  }
+  return strictlyBetter ? true : null;
+}
+function findDominated(g, others){
+  return others.filter(o=>dominance(g,o)===true);
+}
+
+// Two honest lenses instead of one blended "winner" score. How much raw stats
+// should matter vs. skill-damage % is exactly the part of the combat formula
+// that's still unsolved — so instead of guessing a blend, we check whether a
+// stat-first view and a skill-first view even agree before naming a top pick.
+// Stat-lean: raw Total dominates, skill % bonuses are a tiebreaker.
+// Skill-lean: skill/normal damage % bonuses dominate (this is what a big
+// Skill Damage % edge like Longkui's 60% shows up in), Total is a tiebreaker.
+// Overall ranking for the compare tab. Uses the same shared offense/defense
+// functions as every other tab so a girl's relative worth is consistent
+// wherever she appears, then adds a genre synergy term — because a girl who
+// lets you keep a 5-of-a-genre team is worth more than her stat line suggests.
+let mainGenre = null;
+
+// SKILL-FIRST WEIGHTING. Damage is roughly TeamStats x (1 + bonuses), and a
+// real team total (after upgrades and PEAK) is in the millions while a girl's
+// base stats are tens of thousands. Working through the marginal value, 1pp of
+// a damage bonus is worth ~10,000-50,000 base stat points depending on account
+// size — so skills must outweigh raw stats by an order of magnitude. The stat
+// term is kept small but non-zero so it still breaks ties and carries a little
+// signal for very small accounts.
+function baseStrength(g){
+  return (g.total/MAX_TOTAL)*0.15
+       + offenseIndex(g)*1.00
+       + defenseIndex(g)*0.60
+       + ((g.fanCapUp||0))*0.30;
+}
+// Genre bonus is worth ~25% of team stats, so fitting your main genre is a
+// large effective boost — weighted here to be meaningful but not absolute.
+function synergyBonus(g){
+  return (mainGenre && g.genre===mainGenre) ? 0.25 : 0;
+}
+function rankScore(g){ return baseStrength(g) * (1 + synergyBonus(g)); }
+
+// Two lenses for the compare tab: one that leans on raw stats, one that leans
+// on skills. Both are skill-first now; they differ only in how much stat
+// signal they carry, which is what surfaces a genuine trade-off to the user.
+function statLeanScore(g){
+  return (g.total/MAX_TOTAL)*0.45 + offenseIndex(g)*1.00 + defenseIndex(g)*0.60;
+}
+function skillLeanScore(g){
+  return (g.total/MAX_TOTAL)*0.05 + offenseIndex(g)*1.20 + defenseIndex(g)*0.70;
+}
+
+let slots = [null]; // array of girl objects or null
+
+const pickerEl = document.getElementById('picker');
+const emptyEl = document.getElementById('emptyState');
+const gridEl = document.getElementById('compareGrid');
+const recoEl = document.getElementById('recoBox');
+const pcEl = document.getElementById('pcGrid');
+
+function findGirl(name){
+  return GIRLS.find(g=>g.name.toLowerCase() === name.toLowerCase());
+}
+
+function renderPicker(){
+  pickerEl.innerHTML = '';
+  slots.forEach((g, i)=>{
+    const slot = document.createElement('div');
+    slot.className='slot';
+    const input = document.createElement('input');
+    input.placeholder = "Type a girl's name…";
+    input.value = g ? g.name : '';
+    input.dataset.idx = i;
+    input.autocomplete='off';
+    slot.appendChild(input);
+
+    const sugg = document.createElement('div');
+    sugg.className='suggestions';
+    slot.appendChild(sugg);
+
+    input.addEventListener('input', ()=>{
+      const q = input.value.trim().toLowerCase();
+      slots[i] = null;
+      if(!q){ sugg.classList.remove('show'); renderAll(); return; }
+      const matches = GIRLS.filter(x=>x.name.toLowerCase().includes(q)).slice(0,8);
+      sugg.innerHTML='';
+      matches.forEach(m=>{
+        const item = document.createElement('div');
+        item.className='sugg-item';
+        item.innerHTML = `<span>${m.name}</span><span class="g-tag" style="background:${GENRE_COLOR[m.genre]}22;color:${GENRE_COLOR[m.genre]};border:1px solid ${GENRE_COLOR[m.genre]}55;">${m.genre}</span>`;
+        item.addEventListener('mousedown', (e)=>{
+          e.preventDefault(); // stop input blur from firing first and cancelling the selection
+          slots[i]=m; input.value=m.name; sugg.classList.remove('show'); renderAll();
+        });
+        sugg.appendChild(item);
+      });
+      sugg.classList.toggle('show', matches.length>0);
+    });
+    input.addEventListener('blur', ()=> setTimeout(()=>sugg.classList.remove('show'), 150));
+    input.addEventListener('focus', ()=>{ if(input.value.trim()) input.dispatchEvent(new Event('input')); });
+
+    pickerEl.appendChild(slot);
+  });
+}
+
+document.getElementById('addSlotBtn').addEventListener('click', ()=>{
+  if(slots.length>=6) return;
+  slots.push(null); renderPicker();
+});
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  slots=[null]; renderPicker(); renderAll();
+});
+
+function statBar(label, value, max, color){
+  const w = Math.max(4, (value/max)*100);
+  return `<div class="stat-row">
+    <div class="stat-label"><span>${label}</span><span>${value.toLocaleString()}</span></div>
+    <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${w}%;background:${color};"></div></div>
+  </div>`;
+}
+
+function skillListHTML(g){
+  const present = SKILL_FIELDS.filter(f=>has(g[f.key]));
+  if(present.length===0) return `<div class="no-skills">No listed skill bonuses on this sheet.</div>`;
+  // Best single-girl value on each skill across the roster, so a bar shows this
+  // girl against the best there is rather than against an arbitrary 100%.
+  const CEIL = {skillDmgUp:0.60, normalDmgUp:0.90, skillDmgReduce:0.12,
+                normalDmgReduce:0.12, fanCapUp:0.18, rallyCapUp:0.20};
+  const COLOR = {skillDmgUp:'var(--edm)', normalDmgUp:'var(--pop)',
+                 skillDmgReduce:'var(--rnb)', normalDmgReduce:'var(--rnb)',
+                 fanCapUp:'var(--gold)', rallyCapUp:'var(--hiphop)'};
+  return present.map(f=>{
+    const v = g[f.key];
+    if(typeof v !== 'number' || !CEIL[f.key]){
+      // non-numeric skills (flat per-second text) stay as a plain row
+      return `<div class="skill-chip"><span>${f.label}</span><span>${f.fmt(v)}</span></div>`;
+    }
+    const w = Math.max(5, Math.min(100, (v / CEIL[f.key]) * 100));
+    return `<div class="cmp-bar">
+      <em>${f.label}</em>
+      <div class="cmp-track"><i data-w="${w.toFixed(1)}" style="background:${COLOR[f.key]};"></i></div>
+      <b>${f.fmt(v)}</b>
+    </div>`;
+  }).join('');
+}
+
+function renderCompare(selected){
+  const rankEl = document.getElementById('rankBox');
+  const askEl = document.getElementById('mainGenreAsk');
+  if(selected.length < 2){
+    gridEl.style.display='none';
+    recoEl.innerHTML='';
+    pcEl.innerHTML='';
+    rankEl.innerHTML='';
+    askEl.style.display='none';
+    emptyEl.style.display = selected.length===0 ? 'block':'block';
+    emptyEl.innerHTML = selected.length===0
+      ? "<b>No one selected yet.</b><br>Start typing a girl's name above to build your comparison."
+      : '<b>Add one more girl</b><br>Pick at least two to see a comparison.';
+    return;
+  }
+  emptyEl.style.display='none';
+  gridEl.style.display='grid';
+
+  // Ask for main genre only when the picks actually span genres
+  const genresHere = [...new Set(selected.map(g=>g.genre))];
+  if(genresHere.length > 1){
+    askEl.style.display='block';
+    const btnWrap = document.getElementById('mainGenreBtns');
+    btnWrap.innerHTML = genresHere.map(gn=>
+      `<button class="ghost" data-genre="${gn}" style="${mainGenre===gn?`border-color:${GENRE_COLOR[gn]};color:${GENRE_COLOR[gn]};`:''}">${gn}</button>`
+    ).join('') + `<button class="ghost" data-genre="" style="${mainGenre===null?'border-color:var(--gold);color:var(--gold);':''}">No preference</button>`;
+    btnWrap.querySelectorAll('button').forEach(b=>{
+      b.addEventListener('click', ()=>{ mainGenre = b.dataset.genre || null; renderAll(); });
+    });
+  } else {
+    askEl.style.display='none';
+  }
+
+  // Ranked list, strongest first
+  const ranked = selected.slice().sort((a,b)=>rankScore(b)-rankScore(a));
+  const boostedByGenre = mainGenre && ranked[0].genre===mainGenre
+    && selected.some(o=>o!==ranked[0] && baseStrength(o) > baseStrength(ranked[0]));
+  rankEl.innerHTML = `<div class="rank-box">
+    <div class="skill-list-title" style="margin-bottom:10px;">Ranking — strongest first${mainGenre?` (for a ${mainGenre} team)`:''}</div>
+    ${ranked.map((g,i)=>{
+      const fits = mainGenre && g.genre===mainGenre;
+      return `<div class="rank-row">
+        <span class="rank-num">${i+1}</span>
+        <span class="rank-name">${g.name}</span>
+        <span class="tag" style="color:${GENRE_COLOR[g.genre]};border-color:${GENRE_COLOR[g.genre]}55;">${g.genre}</span>
+        ${fits?'<span class="rank-fit">fits your team</span>':''}
+      </div>`;
+    }).join('')}
+    ${boostedByGenre ? `<p class="lineup-note" style="margin:12px 0 0;"><b>${ranked[0].name}</b> ranks first because she keeps your ${mainGenre} genre bonus intact. Another girl here has the better stat line on paper, but breaking a 5-of-a-genre team costs you up to 25% of your whole team's stats — usually more than one stronger girl gives back.</p>` : ''}
+  </div>`;
+
+  const statTop = selected.slice().sort((a,b)=>statLeanScore(b)-statLeanScore(a))[0];
+  const skillTop = selected.slice().sort((a,b)=>skillLeanScore(b)-skillLeanScore(a))[0];
+  const dominantWinner = selected.find(g => selected.filter(x=>x!==g).every(o=>dominance(g,o)===true));
+  const lensesAgree = statTop === skillTop;
+  const top = dominantWinner || statTop; // fallback identity used only for badge fallback below
+
+  gridEl.innerHTML = selected.map(g=>{
+    const color = GENRE_COLOR[g.genre];
+    const dominated = findDominated(g, selected.filter(x=>x!==g));
+    let badge = '';
+    if(dominated.length) badge = '<span class="pick-badge dominant">Best pick</span>';
+    else if(dominantWinner && g!==dominantWinner) badge = '';
+    else if(lensesAgree && g===statTop) badge = '<span class="pick-badge">Best pick</span>';
+    else if(!lensesAgree && g===statTop) badge = '<span class="pick-badge stat-lean">Stronger stats</span>';
+    else if(!lensesAgree && g===skillTop) badge = '<span class="pick-badge skill-lean">Stronger skills</span>';
+    return `<div class="card ${(dominantWinner===g || (lensesAgree && g===statTop)) ? 'top-pick':''}">
+      <div class="card-top" style="background:${color};"></div>
+      <div class="card-body">
+        <div class="card-head">
+          <div>
+            <div class="name">${g.name}</div>
+            <div class="tags">
+              <span class="tag" style="color:${color};border-color:${color}55;">${g.genre}</span>
+              <span class="tag">${g.type}</span>
+            </div>
+          </div>
+          ${badge}
+        </div>
+        ${statBar('Sing', g.sing, MAX_SING, '#f5c518')}
+        ${statBar('Dance', g.dance, MAX_DANCE, '#2bd9c9')}
+        ${statBar('Total', g.total, MAX_TOTAL, color)}
+        <div class="skill-list">
+          <div class="skill-list-title">Skill bonuses</div>
+          ${skillListHTML(g)}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Recommendation: three honest tiers, with reasoning grounded in what the
+  // battle reports actually showed about how each stat behaves.
+  if(boostedByGenre){
+    const rival = selected.slice().sort((a,b)=>baseStrength(b)-baseStrength(a))[0];
+    recoEl.innerHTML = `<div class="reco">
+        <div class="reco-eyebrow">Upgrade priority</div>
+        <div class="reco-main">Upgrade ${ranked[0].name} first</div>
+        <div class="reco-body">
+          On raw numbers <b>${rival.name}</b> is the better girl. But <b>${ranked[0].name}</b> is ${mainGenre}, so she slots into your main team without breaking the genre bonus — and that bonus is worth up to 25% of your entire team's stats. One girl rarely makes up for losing that.
+          <br><br>Pick <b>${rival.name}</b> instead only if you're planning to rebuild around her genre.
+        </div>
+      </div>`;
+  } else if(dominantWinner){
+    recoEl.innerHTML = `<div class="reco dominant-reco">
+        <div class="reco-eyebrow">Clear winner</div>
+        <div class="reco-main">Upgrade ${dominantWinner.name}</div>
+        <div class="reco-body">
+          <b>${dominantWinner.name}</b> matches or beats everyone else here on every stat and skill bonus, with nothing going the other way. No judgement call needed — she's simply the better girl.
+        </div>
+      </div>`;
+  } else if(lensesAgree){
+    const w = statTop;
+    const reasons = [];
+    if(w.total === Math.max(...selected.map(x=>x.total))) reasons.push('the biggest Sing + Dance total, which is the single strongest driver of damage in every battle we\'ve analysed');
+    if(typeof w.skillDmgUp==='number' && w.skillDmgUp === Math.max(...selected.map(x=>x.skillDmgUp||0))) reasons.push('the best Skill Damage bonus, which multiplies the big burst hit that lands every 11 seconds');
+    if(typeof w.normalDmgUp==='number' && w.normalDmgUp === Math.max(...selected.map(x=>x.normalDmgUp||0))) reasons.push('the best Normal Attack bonus, which adds up every single second of a fight');
+    if(typeof w.normalDmgReduce==='number' && w.normalDmgReduce === Math.max(...selected.map(x=>x.normalDmgReduce||0))) reasons.push('the best Normal Attack Reduction, which blunts the damage you take second after second');
+    const reasonText = reasons.length
+      ? `She brings ${reasons.slice(0,3).join(', and ')}.`
+      : 'She comes out ahead whether you weight raw stats or skill bonuses more heavily.';
+    recoEl.innerHTML = `<div class="reco">
+        <div class="reco-eyebrow">Upgrade priority</div>
+        <div class="reco-main">Upgrade ${w.name} first</div>
+        <div class="reco-body">${reasonText} Both a stats-first and a skills-first read of this group point to the same girl, so this is a fairly safe call.</div>
+      </div>`;
+  } else {
+    const statGap = Math.round((statTop.total/skillTop.total - 1)*100);
+    const skillEdge = [];
+    if((skillTop.skillDmgUp||0) > (statTop.skillDmgUp||0)) skillEdge.push(`${Math.round(((skillTop.skillDmgUp||0)-(statTop.skillDmgUp||0))*100)} points more Skill Damage`);
+    if((skillTop.normalDmgUp||0) > (statTop.normalDmgUp||0)) skillEdge.push(`${Math.round(((skillTop.normalDmgUp||0)-(statTop.normalDmgUp||0))*100)} points more Normal Attack`);
+    const edgeText = skillEdge.length ? skillEdge.join(' and ') : 'stronger skill bonuses';
+    recoEl.innerHTML = `<div class="reco tradeoff-reco">
+        <div class="reco-eyebrow">Close call — depends on your team</div>
+        <div class="reco-main">${statTop.name} or ${skillTop.name}</div>
+        <div class="reco-body">
+          <b>${statTop.name}</b> has ${statGap > 0 ? `about ${statGap}% more raw Sing + Dance` : 'the sturdier base stats'} — that raw power applies to every hit she lands and is the most reliable thing you can invest in.
+          <b>${skillTop.name}</b> gives up some of that but brings ${edgeText}.
+          <br><br>
+          <b>How to choose:</b> if the rest of your team already has strong skill bonuses, take <b>${statTop.name}</b> — raw stats are what your existing bonuses multiply. If your team is stat-heavy but light on bonuses, take <b>${skillTop.name}</b>, since bonus percentages are worth more when there's a big stat pool for them to act on.
+        </div>
+      </div>`;
+  }
+
+  // Pros/cons: compare each selected girl against the field
+  pcEl.innerHTML = selected.map(g=>{
+    const others = selected.filter(x=>x!==g);
+    const pros=[], cons=[];
+
+    const beats = findDominated(g, others);
+    beats.forEach(o=>pros.push(`Better than ${o.name} in every way — no trade-off`));
+    const beatenBy = others.filter(o=>dominance(o,g)===true);
+    beatenBy.forEach(o=>cons.push(`${o.name} beats her on everything — pick ${o.name} instead`));
+
+    if(g.total === Math.max(...selected.map(x=>x.total))) pros.push('Biggest Sing + Dance pool here — raw stats drive more of the outcome than anything else');
+    else if(g.total === Math.min(...selected.map(x=>x.total))) cons.push('Smallest stat pool here, so every bonus she has works off a smaller base');
+
+    if(g.sing === Math.max(...selected.map(x=>x.sing))) pros.push('Highest Sing — this is the main source of damage output');
+    if(g.dance === Math.min(...selected.map(x=>x.dance)) && selected.length>1) cons.push('Lowest Dance in this group');
+
+    const SKILL_MEANING = {
+      skillDmgUp: 'Skill Damage — multiplies the big burst that lands every 11 seconds',
+      normalDmgUp: 'Normal Attack — adds damage every single second, so it always matters',
+      normalDmgReduce: 'Normal Attack Reduction — cuts the steady damage you take each second',
+      skillDmgReduce: 'Skill Reduction — softens enemy burst hits',
+      fanCapUp: 'Fan Cap — a bigger fan pool means you survive longer before hitting the 20% loss limit',
+      rallyCapUp: 'Rally Cap — lets you bring more fans into real PvP rallies',
+    };
+    Object.entries(SKILL_MEANING).forEach(([key, meaning])=>{
+      const mine = g[key];
+      if(!has(mine) || typeof mine!=='number') return;
+      const othersVals = others.map(o=>(typeof o[key]==='number'? o[key] : 0));
+      const maxOther = othersVals.length ? Math.max(...othersVals) : 0;
+      if(mine > maxOther) pros.push(`Best ${meaning}`);
+    });
+
+    ['skillDmgUp','normalDmgUp'].forEach(key=>{
+      if(!has(g[key]) && others.some(o=>typeof o[key]==='number')){
+        cons.push(key==='skillDmgUp' ? 'No Skill Damage bonus at all' : 'No Normal Attack bonus at all');
+      }
+    });
+
+    if(versatility(g)===0) cons.push('No skill bonuses — she is pure stats');
+
+    if(pros.length===0) pros.push('Balanced — no standout strength, but no glaring hole either');
+    if(cons.length===0) cons.push('No real weak spot in this group');
+
+    return `<div class="pc-card">
+      <h3>${g.name}</h3>
+      <ul class="pc-list">
+        ${pros.slice(0,5).map(p=>`<li class="pro">${p}</li>`).join('')}
+        ${cons.slice(0,3).map(c=>`<li class="con">${c}</li>`).join('')}
+      </ul>
+    </div>`;
+  }).join('');
+}
+
+function renderAll(){
+  const selected = slots.filter(Boolean);
+  renderCompare(selected);
+}
+
+// Roster browser
+const genreFilter = document.getElementById('genreFilter');
+const typeFilter = document.getElementById('typeFilter');
+const rosterSearch = document.getElementById('rosterSearch');
+const rosterBody = document.getElementById('rosterBody');
+const rosterCount = document.getElementById('rosterCount');
+
+[...new Set(GIRLS.map(g=>g.genre))].sort().forEach(g=>{
+  const opt=document.createElement('option'); opt.value=g; opt.textContent=g; genreFilter.appendChild(opt);
+});
+[...new Set(GIRLS.map(g=>g.type))].sort().forEach(t=>{
+  const opt=document.createElement('option'); opt.value=t; opt.textContent=t; typeFilter.appendChild(opt);
+});
+
+let sortKey='total', sortDir=-1;
+document.querySelectorAll('thead th[data-key]').forEach(th=>{
+  th.addEventListener('click', ()=>{
+    const k = th.dataset.key;
+    if(sortKey===k) sortDir*=-1; else { sortKey=k; sortDir=1; }
+    renderRoster();
+  });
+});
+
+function skillHighlight(g){
+  const present = SKILL_FIELDS.filter(f=>has(g[f.key]));
+  if(present.length===0) return '—';
+  return present.slice(0,2).map(f=>`${f.label} ${f.fmt(g[f.key])}`).join(', ') + (present.length>2 ? ` +${present.length-2} more` : '');
+}
+
+function renderRoster(){
+  const q = rosterSearch.value.trim().toLowerCase();
+  const gf = genreFilter.value, tf = typeFilter.value;
+  let rows = GIRLS.filter(g=>{
+    if(q && !g.name.toLowerCase().includes(q)) return false;
+    if(gf && g.genre!==gf) return false;
+    if(tf && g.type!==tf) return false;
+    return true;
+  });
+  rows.sort((a,b)=>{
+    const av=a[sortKey], bv=b[sortKey];
+    if(typeof av==='string') return av.localeCompare(bv)*sortDir;
+    return (av-bv)*sortDir;
+  });
+  rosterCount.textContent = rows.length;
+  rosterBody.innerHTML = rows.map(g=>`<tr>
+    <td>${g.name}</td>
+    <td><span class="genre-dot" style="background:${GENRE_COLOR[g.genre]};"></span>${g.genre}</td>
+    <td>${g.type}</td>
+    <td>${g.sing.toLocaleString()}</td>
+    <td>${g.dance.toLocaleString()}</td>
+    <td>${g.total.toLocaleString()}</td>
+    <td>${skillHighlight(g)}</td>
+    <td><button class="roster-add" data-name="${g.name}">+ compare</button></td>
+  </tr>`).join('');
+
+  rosterBody.querySelectorAll('.roster-add').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const name = btn.dataset.name;
+      const g = findGirl(name);
+      const emptyIdx = slots.findIndex(s=>!s);
+      if(emptyIdx>=0) slots[emptyIdx]=g;
+      else slots.push(g);
+      renderPicker(); renderAll();
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+  });
+}
+
+genreFilter.addEventListener('change', renderRoster);
+typeFilter.addEventListener('change', renderRoster);
+rosterSearch.addEventListener('input', renderRoster);
+
+// Page navigation (landing menu <-> individual pages)
+// Remembers where the last menu card was tapped, so the page can grow out of
+// it — motion that shows what happened rather than decorating the change.
+let lastTapOrigin = null;
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const menu = document.getElementById('landingMenu');
+  if(menu) menu.style.display='none';
+  const primer = document.querySelector('.primer');
+  if(primer) primer.style.display='none';
+  const page = document.getElementById(id);
+  if(page){
+    page.classList.add('active');
+    page.classList.remove('growing');
+    if(lastTapOrigin){
+      page.style.setProperty('--ox', lastTapOrigin.x + '%');
+      page.style.setProperty('--oy', lastTapOrigin.y + '%');
+      void page.offsetWidth;                 // restart the animation
+      page.classList.add('growing');
+      lastTapOrigin = null;
+    }
+  }
+  const foot = document.getElementById('siteFooter');
+  if(foot) foot.style.display='block';
+  // Re-render on entry so a tab never shows stale or empty content because it
+  // was last drawn before the user picked their girls.
+  try{
+    if(id==='peakSection') renderPeak();
+    if(id==='levelSection') renderLevelCalc();
+    if(id==='harmonySection') renderHarmony();
+    if(id==='teamBuilderSection'){ renderChips(); renderTbTable(); renderTeamBuilder(); }
+  }catch(e){ console.error('render on open failed', e); }
+  window.scrollTo({top:0});
+}
+function showLanding(){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('landingMenu').style.display='block';
+  document.querySelector('.primer').style.display='block';
+  document.getElementById('siteFooter').style.display='none';
+  window.scrollTo({top:0});
+}
+document.querySelectorAll('.menu-card[data-target]').forEach(btn=>{
+  btn.addEventListener('click', (e)=>{
+    // Record the card's centre as a percentage of the viewport, so the page
+    // that opens grows out of exactly the card that was tapped.
+    const r = btn.getBoundingClientRect();
+    lastTapOrigin = {
+      x: ((r.left + r.width/2) / window.innerWidth) * 100,
+      y: ((r.top + r.height/2) / window.innerHeight) * 100,
+    };
+    showPage(btn.dataset.target);
+  });
+});
+document.querySelectorAll('.back-btn').forEach(btn=>{
+  btn.addEventListener('click', showLanding);
+});
+
+// Leaderboard
+const LB_METRICS = [
+  {key:'total', label:'Total stat', fmt:v=>v.toLocaleString()},
+  {key:'sing', label:'Sing', fmt:v=>v.toLocaleString()},
+  {key:'dance', label:'Dance', fmt:v=>v.toLocaleString()},
+  {key:'skillDmgUp', label:'Skill Damage %', fmt:pct},
+  {key:'normalDmgUp', label:'Normal Attack %', fmt:pct},
+  {key:'skillDmgReduce', label:'Skill Reduction %', fmt:pct},
+  {key:'normalDmgReduce', label:'Normal Atk Reduction %', fmt:pct},
+  {key:'fanCapUp', label:'Fan Cap %', fmt:pct},
+  {key:'rallyCapUp', label:'Rally Cap %', fmt:pct},
+];
+const lbGenreFilter = document.getElementById('lbGenreFilter');
+const lbTypeFilter = document.getElementById('lbTypeFilter');
+const lbMetric = document.getElementById('lbMetric');
+const lbList = document.getElementById('lbList');
+
+[...new Set(GIRLS.map(g=>g.genre))].sort().forEach(g=>{
+  const opt=document.createElement('option'); opt.value=g; opt.textContent=g; lbGenreFilter.appendChild(opt);
+});
+[...new Set(GIRLS.map(g=>g.type))].sort().forEach(t=>{
+  const opt=document.createElement('option'); opt.value=t; opt.textContent=t; lbTypeFilter.appendChild(opt);
+});
+LB_METRICS.forEach(m=>{
+  const opt=document.createElement('option'); opt.value=m.key; opt.textContent=m.label; lbMetric.appendChild(opt);
+});
+
+function renderLeaderboard(){
+  const gf = lbGenreFilter.value, tf = lbTypeFilter.value;
+  const metric = LB_METRICS.find(m=>m.key===lbMetric.value) || LB_METRICS[0];
+  let rows = GIRLS.filter(g=>{
+    if(gf && g.genre!==gf) return false;
+    if(tf && g.type!==tf) return false;
+    return typeof g[metric.key]==='number';
+  });
+  rows.sort((a,b)=>b[metric.key]-a[metric.key]);
+  rows = rows.slice(0,15);
+  if(rows.length===0){
+    lbList.innerHTML = emptyState('Nothing matches', 'No girls have this bonus with the current filter.', 'search');
+    return;
+  }
+  // A leaderboard is a ranking, so the top of it should look like the top —
+  // a thin gold marker and a faint gradient rather than medals or badges.
+  applyGenreWash(lbList.parentElement || lbList, gf);
+  lbList.innerHTML = `<div class="table-scroll">` + rows.map((g,i)=>`
+    <div class="lb-row${i<3?' lb-top':''}">
+      <div class="lb-rank">${i+1}</div>
+      <span class="lb-medal${i===0?'':i===1?' s2':i===2?' s3':' none'}"></span>
+      <div class="lb-name">${g.name}</div>
+      <div class="lb-tags">
+        <span class="tag" style="color:${GENRE_COLOR[g.genre]};border-color:${GENRE_COLOR[g.genre]}55;">${g.genre}</span>
+        <span class="tag">${g.type}</span>
+      </div>
+      <div class="lb-value">${metric.fmt(g[metric.key])}</div>
+    </div>`).join('') + `</div>`;
+}
+lbGenreFilter.addEventListener('change', renderLeaderboard);
+lbTypeFilter.addEventListener('change', renderLeaderboard);
+lbMetric.addEventListener('change', renderLeaderboard);
+
+// ---- Team Builder ----
+const GENRE_MULT = {5:1.25, 4:1.20, 3:1.15};
+function genreMultiplierFor(count){ return GENRE_MULT[count] || 1.0; }
+const WHALE_GIRLS = new Set(['Rhea','Monica','Longkui']);
+
+// Each scorer splits into a "stat" part (Sing+Dance-based — this is what the
+// in-game genre bonus actually multiplies) and a "skill" part (bonus %s,
+// which the genre bonus does NOT touch). Splitting them means a 5-same-genre
+// team's +25% is weighted correctly instead of being spread thin across the
+// whole score — a big deal, since that 25% is one of the few numbers we
+// actually know for certain.
+function makeScorer(statFn, skillFn){
+  return { stat: statFn, skill: skillFn, full: g=>statFn(g)+skillFn(g) };
+}
+// Fan Cap is weighted lower than offense here on purpose: a girl with a fan
+// cap bonus and nothing else shouldn't automatically outscore a girl with
+// real Skill/Normal Attack bonuses just because fan cap fills more of its
+// (smaller) share of the score.
+// PARKING / P25 — its own formula, not a tweak of the PvP one.
+//
+// You lose when you lose 20% of YOUR OWN fans, so:
+//   my time-to-lose    = 0.20*myFans / theirDPS
+//   their time-to-lose = 0.20*theirFans / myDPS
+// I win when myFans*myDPS > theirFans*theirDPS. Fans and damage MULTIPLY,
+// which means 1pp of Fan Cap is worth exactly 1pp of a damage bonus here —
+// the same weight as Normal Attack, not half of it.
+//
+// Skill Damage is discounted (0.95 per point, fitted to 37 real parking
+// reports) because these fights are short and the burst often never fires.
+// Rally Capacity is worth nothing: it sizes a rally bus, not a parking car.
+const parkingScorer = makeScorer(
+  g => (g.total/MAX_TOTAL)*0.20,
+  g => ((g.fanCapUp||0))*1.00 + offenseShort(g)*1.00 + defenseShort(g)*0.50
+);
+// Short fights: the tick stream governs most of the outcome because the burst
+// often never fires. Fan Cap at full value (fans x damage multiply here).
+parkingScorer.params = { c:0.25, fanW:1.00, statW:1.00, tol:0.04 };
+// For "getting attacked, hit back as hard as possible" — no rally cap (not
+// relevant on defense) and no defense weighting (the goal here is damage out,
+// not damage avoided).
+// HQ defence: the pool is fixed by game rules (20M or your inventory, plus 12M
+// from teammates), so Fan Cap and Rally Cap do nothing. Judge on combat skills
+// only. Reductions count — these fights run long — but a girl with reductions
+// and no damage is a dead slot, so offense is weighted well above defense.
+const maxDamageScorer = makeScorer(
+  g => (g.total/MAX_TOTAL)*0.12,
+  g => offenseLong(g)*1.20 + defenseLong(g)*0.55
+);
+// HQ defence: long fight, so the burst lands many times. Fan Cap does nothing
+// (your pool is set by game rules, not your girls).
+maxDamageScorer.params = { c:1.50, fanW:0.00, statW:1.00, tol:0.08 };
+// Rally/siege fights run for minutes, so BOTH damage sources fire many times:
+// normal attack ticks every second, skill pulses land every ~11s. offenseIndex
+// already counts both on the common scale, so it is reused rather than
+// duplicated here — keeping every tab on one shared scale.
+// Fan Cap is deliberately absent: it does nothing for a rally bus. Rally Cap is
+// handled separately as a slot count, not a score term, since it multiplies the
+// whole group's fan pool rather than this girl's own contribution.
+const rallyScorer = makeScorer(
+  g => (g.total/MAX_TOTAL)*0.12,
+  g => offenseLong(g)*1.10 + defenseLong(g)*0.65
+);
+// Rally/siege: minutes long, 10-30 bursts land, so the skill axis carries as
+// much as the tick axis. Fan Cap irrelevant — bus size comes from Rally Cap.
+rallyScorer.params = { c:1.50, fanW:0.00, statW:1.00, tol:0.08 };
+function hasRallyCap(g){ return typeof g.rallyCapUp==='number' && g.rallyCapUp>0; }
+
+function buildCandidate(team){
+  const counts = {};
+  team.forEach(g=>counts[g.genre]=(counts[g.genre]||0)+1);
+  const maxCount = Math.max(...Object.values(counts));
+  const dominantGenre = Object.keys(counts).find(k=>counts[k]===maxCount);
+  return {team, mult: genreMultiplierFor(maxCount), genreCount: maxCount, dominantGenre};
+}
+
+// ALWAYS prefers the deepest genre stack the pool can support: checks for any
+// genre with 5+ unlocked girls first, then 4, then 3, only falling back to a
+// mixed top-5 (no bonus) if nothing qualifies. The +25%/+20%/+15% bonus is too
+// big to leave on the table, so depth is checked before raw score.
+// ---- Team scoring: two separate axes, with diminishing returns ----
+//
+// Normal Attack and Skill Damage are DIFFERENT mechanics and must never be
+// added together. Normal attack bonus and normal-attack reduction both act on
+// the per-second tick stream, so they share one axis. Skill damage bonus and
+// skill reduction both act on the ~11s burst, so they share the other.
+//
+// Damage over a burst cycle is roughly:
+//   10 ticks x stats x (1 + normalAxis)  +  1 burst x stats x k x (1 + skillAxis)
+// so the two axes multiply rather than add, and each is kept strictly separate.
+// two are kept strictly separate. Fan Cap is a MULTIPLIER on the whole team
+// rather than an axis, because in parking you win when
+// myFans x myDamage > theirFans x theirDamage — fans and damage multiply.
+function normalAxis(g){ return (g.normalDmgUp||0) + (g.normalDmgReduce||0); }
+function skillAxis(g){  return (g.skillDmgUp||0)  + (g.skillDmgReduce||0);  }
+
+// Team value.
+//
+// Three things this gets right that earlier versions did not.
+//
+// 1. BASE STATS ARE PROPORTIONAL. A team's real total is built FROM the girls
+//    you field, scaled up by upgrades and PEAK — it is not a big fixed account
+//    pool that the girls add a sliver to. So a girl with twice the base stats
+//    contributes twice as much at any investment level, and swapping a 66k girl
+//    for a 32k one costs ~15% of the team's stats whether you are new or a
+//    whale. (An earlier version treated stats as a small addition to a 3M base,
+//    which made them near-irrelevant and let low-stat girls in on skills alone.)
+//
+// 2. THE TWO DAMAGE SOURCES MULTIPLY. From the per-second log, over one 11s
+//    cycle you land 10 ticks and one burst, and burst = tick x (1.14 + 10.26 x
+//    skillBonus). So output ~ (1 + normalAttack) x (1 + c x skillDamage).
+//
+// 3. REDUCTIONS ARE SURVIVABILITY, NOT OUTPUT. Cutting incoming damage buys
+//    time, which is a separate multiplier — not something added to your own
+//    damage.
+//
+// 4. SKILL REDUCTION BEATS NORMAL REDUCTION. burst/tick = 1.14 + 10.26 x the
+//    attacker's skill bonus. Real opponents in the battle reports run 134-176%
+//    skill damage, which makes their burst 13-20x a single tick — so the burst
+//    is 60-65% of the damage landing on you, and skill reduction blunts the
+//    bigger half. (An earlier version had this backwards at 70/30 because it
+//    was calibrated on one log whose defender had only 24% skill bonus.)
+//
+// 5. MORE WORKING SKILLS BEATS BIGGER NUMBERS. A girl covering three of the
+//    four combat stats is worth more than her raw totals suggest, because each
+//    skill pays off in a different situation and the model's weights are
+//    uncertain. A small explicit bonus per distinct working skill encodes that
+//    rather than leaving it to luck.
+// Stats enter proportionally, normalised so the term sits near 1 for a strong
+// five-girl team. statW lets a mode dial how much raw stats matter.
+const STAT_REF = 300000;        // a solid 5-girl base-stat total
+const RED_NORMAL_SHARE = 0.35;  // ticks are the smaller share of incoming damage
+const RED_SKILL_SHARE  = 0.65;  // bursts are the bigger share vs real opponents
+// A "working skill" is one that does something IN THIS MODE. Fan Cap counts in
+// parking — the win condition there is myFans x myDamage, so a bigger pool is
+// worth the same as more damage — but not in rally or HQ defence, where the
+// pool is set by rally capacity or by game rules instead.
+function workingSkills(g, countFan){
+  return ((g.normalDmgUp||0)>0) + ((g.skillDmgUp||0)>0)
+       + ((g.normalDmgReduce||0)>0) + ((g.skillDmgReduce||0)>0)
+       + (countFan ? ((g.fanCapUp||0)>0 ? 1 : 0) : 0);
+}
+function teamValue(team, mult, c, fanW, statW){
+  const stats = team.reduce((s,g)=>s+g.total,0) * mult;
+  const nAtk  = team.reduce((s,g)=>s+(g.normalDmgUp||0),0);
+  const sDmg  = team.reduce((s,g)=>s+(g.skillDmgUp||0),0);
+  const nRed  = team.reduce((s,g)=>s+(g.normalDmgReduce||0),0);
+  const sRed  = team.reduce((s,g)=>s+(g.skillDmgReduce||0),0);
+  const fan   = team.reduce((s,g)=>s+(g.fanCapUp||0),0);
+  const skillCount = team.reduce((s,g)=>s+workingSkills(g, fanW>0),0);
+  const statTerm = Math.pow(stats/STAT_REF, statW);
+  const offense  = (1 + nAtk) * (1 + c*sDmg);
+  const survive  = 1 / (1 - Math.min(0.75, RED_NORMAL_SHARE*nRed + RED_SKILL_SHARE*sRed));
+  const coverage = 1 + 0.02*skillCount;   // rewards girls who do several things
+  return statTerm * offense * survive * coverage * (1 + fan*fanW);
+}
+
+// Exhaustive best-five search with an explicit SKILL-DAMAGE TIEBREAK.
+//
+// Two lessons baked in here.
+//
+// 1. Greedy selection (one girl at a time) gets stuck — an early pick that
+//    looks strong alone blocks a better combination. A genre holds at most ~21
+//    girls, so every combination is checked instead.
+//
+// 2. The burst-size coefficient comes from a SINGLE per-second battle log, so
+//    the damage model's error bars are wide. Repeatedly, the top-scoring team
+//    was only 2-5% ahead of a team carrying 20-28 more points of Skill Damage
+//    — a bad bet, because Skill Damage is exactly the component the model is
+//    least sure about, and the one that compounds over a long fight.
+//
+//    So: among all teams within `tol` of the best modelled damage, take the one
+//    with the most Skill Damage. Near-equal on what we can measure, better on
+//    what we can't. This is self-correcting — it holds for every genre and
+//    mode without per-genre tuning.
+function bestFive(list, p){
+  if(list.length < 5) return list.slice();
+  let cands = list;
+  if(cands.length > 16){
+    cands = cands.slice().sort((a,b)=>
+      teamValue([b],1,p.c,p.fanW,p.statW) - teamValue([a],1,p.c,p.fanW,p.statW)
+    ).slice(0,16);
+  }
+  const n = cands.length, teams = [];
+  for(let a=0;a<n-4;a++)
+   for(let b=a+1;b<n-3;b++)
+    for(let d=b+1;d<n-2;d++)
+     for(let e=d+1;e<n-1;e++)
+      for(let f=e+1;f<n;f++){
+        const t = [cands[a],cands[b],cands[d],cands[e],cands[f]];
+        teams.push({ t, v: teamValue(t,1,p.c,p.fanW,p.statW),
+                     sd: t.reduce((s,g)=>s+(g.skillDmgUp||0),0),
+                     sk: t.reduce((s,g)=>s+workingSkills(g, p.fanW>0),0),
+                     hm: t.reduce((s,g)=>s+(canReceiveHarmony(g)?1:0),0) });
+      }
+  if(!teams.length) return cands.slice(0,5);
+  const topV = Math.max(...teams.map(x=>x.v));
+  const tol = (p.tol != null) ? p.tol : 0.06;
+  const near = teams.filter(x=>x.v >= topV*(1-tol));
+  // Among near-equal teams, prefer COVERAGE first (total working skills across
+  // the five), then Skill Damage, then Harmony upside, then raw value.
+  //
+  // Coverage comes first because sorting on Skill Damage alone will happily
+  // swap a two-skill girl for a one-skill girl carrying a bigger Skill Damage
+  // number. The Harmony tiebreak matters where girls are statistically
+  // identical — EDM's Sari, Xenia and Natasha share stats and skills, but only
+  // the abroad ones can ever take assistants, so the eligible girl is free
+  // upside at no cost.
+  near.sort((a,b)=> (b.sk - a.sk) || (b.sd - a.sd) || (b.hm - a.hm) || (b.v - a.v));
+  return near[0].t;
+}
+
+function bestLineup(pool, scorer){
+  if(pool.length < 5) return null;
+  const p = scorer.params;
+  const byGenre = {};
+  pool.forEach(g=>{ (byGenre[g.genre]=byGenre[g.genre]||[]).push(g); });
+  // Always take the deepest genre stack available — the bonus is too big to skip.
+  for(const k of [5,4,3]){
+    let bestAtK = null, bestValAtK = -Infinity;
+    Object.values(byGenre).forEach(list=>{
+      if(list.length < k) return;
+      const core = bestFive(list, p).slice(0,k);
+      const coreNames = new Set(core.map(g=>g.name));
+      const others = bestFive(pool.filter(g=>!coreNames.has(g.name)), p).slice(0,5-k);
+      if(core.length + others.length !== 5) return;
+      const candidate = buildCandidate(core.concat(others));
+      const val = teamValue(candidate.team, candidate.mult, p.c, p.fanW, p.statW);
+      if(val > bestValAtK){ bestValAtK = val; bestAtK = candidate; }
+    });
+    if(bestAtK) return bestAtK;
+  }
+  return buildCandidate(bestFive(pool, p));
+}
+
+// Builds up to 5 distinct P25 teams (a full squad) by repeatedly taking the
+// best lineup from whatever's left, so no girl appears on two teams at once.
+// Because bestLineup always maximizes genre depth first, this naturally
+// produces one 5-same-genre team per genre bucket you have enough of, then
+// combines the leftovers from your smaller genre pools for the final team(s).
+function buildFiveTeams(pool, scorer){
+  let remaining = pool.slice();
+  const teams = [];
+  for(let i=0;i<5;i++){
+    const t = bestLineup(remaining, scorer);
+    if(!t) break;
+    teams.push(t);
+    const names = new Set(t.team.map(g=>g.name));
+    remaining = remaining.filter(g=>!names.has(g.name));
+  }
+  return teams;
+}
+
+function detectMainGenre(pool){
+  const counts = {};
+  pool.forEach(g=>counts[g.genre]=(counts[g.genre]||0)+1);
+  let best=null, bestCount=-1;
+  Object.entries(counts).forEach(([genre,count])=>{ if(count>bestCount){bestCount=count; best=genre;} });
+  return best;
+}
+// Builds a single-genre rally lineup targeting `capCount` rally-cap girls.
+// A rally-cap girl only takes a slot if she EARNS it: swapping her in costs
+// the damage of whoever she displaces, so a pure-capacity girl with no attack
+// skills (e.g. Rock's Vesper/Kelly) is rejected unless the capacity genuinely
+// outweighs what's lost. Returns the team plus how many cap girls made the cut.
+function buildRallyTeam(pool, genre, capCount, maxMode){
+  const inGenre = pool.filter(g=>g.genre===genre);
+  if(inGenre.length < 5) return null;
+  // Start from the best damage five (team-aware, so the axes stay balanced),
+  // then try substituting cap girls in.
+  let team = bestFive(inGenre, rallyScorer.params);
+  // Order cap girls by capacity, then by how much they still contribute in a
+  // long fight. A cap girl with real attack skills is always tried before one
+  // whose only contribution is the capacity itself.
+  // Order cap girls by capacity, then skill damage, then Harmony eligibility.
+  // Where two are otherwise identical, take the one who can still receive
+  // assistants — she has upside the other can never have.
+  const capGirls = inGenre.filter(hasRallyCap).sort((a,b)=>
+      (b.rallyCapUp - a.rallyCapUp)
+   || ((b.skillDmgUp||0) - (a.skillDmgUp||0))
+   || ((canReceiveHarmony(b)?1:0) - (canReceiveHarmony(a)?1:0))
+   || (rallyScorer.full(b) - rallyScorer.full(a)));
+  let added = 0;
+  for(const cap of capGirls){
+    if(added >= capCount) break;
+    if(team.some(t=>t.name===cap.name)){ added++; continue; }
+    // Displace the weakest non-cap girl currently in the team.
+    const cands = team.filter(t=>!hasRallyCap(t));
+    if(!cands.length) break;
+    const weakest = cands.reduce((a,b)=>rallyScorer.full(a)<=rallyScorer.full(b)?a:b);
+    const damageLost = rallyScorer.full(weakest) - rallyScorer.full(cap);
+    // Capacity is worth giving up some damage for, but not an unlimited amount.
+    // Calibrated against the roster: swapping in a cap girl who still has real
+    // attack skills (EDM's Sari/Xenia/Natasha) costs ~0.16 of damage score,
+    // while a pure-capacity girl with no attack skills at all (Rock's
+    // Vesper/Kelly) costs ~0.33. The threshold sits between the two, so useful
+    // cap girls make the team and dead slots never do.
+    // "Max capacity" means take every cap girl who brings SOMETHING — that's the
+    // whole point of the option, so the only bar is that she isn't a completely
+    // dead slot (no attack skills or reductions at all, like Rock's
+    // Vesper/Kelly). Lower cap targets stay selective on damage cost.
+    const capIsDeadWeight = offenseLong(cap) === 0 && defenseLong(cap) === 0;
+    if(capIsDeadWeight) continue;
+    // In max-capacity mode take every usable cap girl regardless of damage cost
+    // — that is the point of the option. Otherwise stay selective.
+    const capWorth = maxMode ? Infinity : 0.22;
+    if(damageLost > capWorth) continue; // not worth the slot
+    team = team.filter(t=>t.name!==weakest.name).concat([cap]);
+    added++;
+  }
+  if(team.length < 5) return null;
+  const cand = buildCandidate(team);
+  cand.capCount = team.filter(hasRallyCap).length;
+  cand.capTotal = team.reduce((s,g)=>s+(g.rallyCapUp||0),0);
+  cand.capWanted = capCount;
+  return cand;
+}
+function countRallyCapInGenre(pool, genre){
+  return pool.filter(g=>g.genre===genre && hasRallyCap(g)).length;
+}
+
+// ---- Saved settings ----
+// Remembers your unlocked girls and PEAK levels in this browser so you don't
+// have to re-enter them every visit. Wrapped in try/catch because some
+// browsers (private mode, embedded frames) block storage entirely — if that
+// happens the site still works, it just won't remember between visits.
+const SAVE_KEY = 'idolCompanyAssistant.v1';
+let saveReady = false;   // set true once initial load is done, so we don't
+                         // save over good data while still restoring it
+function saveState(){
+  if(!saveReady) return;
+  try{
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      unlocked: [...unlocked],
+      rallyLeaderAnswer, rallyGenre, parkingWarsAnswer, harmonyGenre, harmonyTeamId, harmonyGenre,
+      peakGirls,
+      pkTargets: [...pkTargets],
+      pkBudget: (document.getElementById('pkBudget')||{}).value || '',
+    }));
+  }catch(e){ /* storage unavailable — carry on without saving */ }
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return null;
+    return JSON.parse(raw);
+  }catch(e){ return null; }
+}
+function clearState(){
+  try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
+}
+
+let unlocked = new Set();
+let rallyLeaderAnswer = null;
+let rallyGenre = null;   // user-chosen main genre for rally lineups
+let parkingWarsAnswer = null;
+const tbSearch = document.getElementById('tbSearch');
+const tbSuggestions = document.getElementById('tbSuggestions');
+const tbChips = document.getElementById('tbChips');
+const tbEmpty = document.getElementById('tbEmpty');
+const tbResults = document.getElementById('tbResults');
+const rallyLeaderQ = document.getElementById('rallyLeaderQ');
+
+function syncAll(){ renderChips(); renderTbTable(); renderTeamBuilder(); renderHarmony(); renderPeak(); saveState(); }
+
+function renderChips(){
+  tbChips.innerHTML = [...unlocked].sort().map(name=>`
+    <span class="tb-chip">${name}<button data-name="${name}" title="Remove">×</button></span>
+  `).join('');
+  tbChips.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('mousedown', (e)=>{
+      e.preventDefault();
+      unlocked.delete(btn.dataset.name);
+      syncAll();
+    });
+  });
+}
+
+tbSearch.addEventListener('input', ()=>{
+  const q = tbSearch.value.trim().toLowerCase();
+  if(!q){ tbSuggestions.classList.remove('show'); return; }
+  const matches = GIRLS.filter(g=>g.name.toLowerCase().includes(q) && !unlocked.has(g.name)).slice(0,8);
+  tbSuggestions.innerHTML = matches.map(m=>`
+    <div class="sugg-item" data-name="${m.name}">
+      <span>${m.name}</span>
+      <span class="g-tag" style="background:${GENRE_COLOR[m.genre]}22;color:${GENRE_COLOR[m.genre]};border:1px solid ${GENRE_COLOR[m.genre]}55;">${m.genre}</span>
+    </div>`).join('');
+  tbSuggestions.querySelectorAll('.sugg-item').forEach(item=>{
+    item.addEventListener('mousedown', (e)=>{
+      e.preventDefault();
+      unlocked.add(item.dataset.name);
+      tbSearch.value=''; tbSuggestions.classList.remove('show');
+      syncAll();
+    });
+  });
+  tbSuggestions.classList.toggle('show', matches.length>0);
+});
+tbSearch.addEventListener('blur', ()=> setTimeout(()=>tbSuggestions.classList.remove('show'), 150));
+
+document.getElementById('tbSelectAllBtn').addEventListener('click', ()=>{
+  GIRLS.forEach(g=>unlocked.add(g.name));
+  syncAll();
+});
+document.getElementById('tbClearBtn').addEventListener('click', ()=>{
+  unlocked = new Set();
+  syncAll();
+});
+
+// Genre-sortable unlock grid (multi-column to keep it compact)
+const tbTableGenreFilter = document.getElementById('tbTableGenreFilter');
+[...new Set(GIRLS.map(g=>g.genre))].sort().forEach(g=>{
+  const opt=document.createElement('option'); opt.value=g; opt.textContent=g; tbTableGenreFilter.appendChild(opt);
+});
+let tbSortKey='name', tbSortDir=1;
+document.querySelectorAll('#teamBuilderSection button[data-sort]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const k = btn.dataset.sort;
+    if(tbSortKey===k) tbSortDir*=-1; else { tbSortKey=k; tbSortDir=1; }
+    renderTbTable();
+  });
+});
+tbTableGenreFilter.addEventListener('change', renderTbTable);
+// Bulk select/deselect everything currently visible under the genre filter, so
+// you can grab a whole genre in one click instead of ticking 20 boxes.
+function tbShownGirls(){
+  const gf = tbTableGenreFilter.value;
+  return GIRLS.filter(g=> !gf || g.genre===gf);
+}
+document.getElementById('tbSelectShownBtn').addEventListener('click', ()=>{
+  tbShownGirls().forEach(g=>unlocked.add(g.name));
+  syncAll();
+});
+document.getElementById('tbDeselectShownBtn').addEventListener('click', ()=>{
+  tbShownGirls().forEach(g=>unlocked.delete(g.name));
+  syncAll();
+});
+
+function renderTbTable(){
+  const gf = tbTableGenreFilter.value;
+  let rows = GIRLS.filter(g=> !gf || g.genre===gf);
+  rows.sort((a,b)=> a[tbSortKey].localeCompare(b[tbSortKey]) * tbSortDir);
+  document.getElementById('tbTableBody').innerHTML = rows.map(g=>`
+    <div class="tb-unlock-row">
+      <span class="name-genre">
+        <span class="genre-dot" style="background:${GENRE_COLOR[g.genre]};flex-shrink:0;"></span>
+        <span>${g.name}</span>
+      </span>
+      <input type="checkbox" data-name="${g.name}" ${unlocked.has(g.name)?'checked':''}>
+    </div>`).join('');
+  document.getElementById('tbTableBody').querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      if(cb.checked) unlocked.add(cb.dataset.name); else unlocked.delete(cb.dataset.name);
+      syncAll();
+    });
+  });
+}
+
+document.getElementById('rlYesBtn').addEventListener('click', ()=>{ rallyLeaderAnswer=true; renderTeamBuilder(); saveState(); });
+function renderRallyGenreBtns(pool){
+  const wrap=document.getElementById('rlGenreWrap');
+  const genres=[...new Set(pool.map(g=>g.genre))].filter(gn=>pool.filter(x=>x.genre===gn).length>=5).sort();
+  // Only worth asking when there is an actual choice — if only one genre can
+  // field five girls, that is obviously the main team.
+  if(rallyLeaderAnswer!==true || genres.length<2){
+    wrap.style.display='none';
+    if(genres.length===1) rallyGenre = genres[0];
+    return;
+  }
+  wrap.style.display='block';
+  const btns=document.getElementById('rlGenreBtns');
+  btns.innerHTML=genres.map(gn=>`<button class="ghost" data-genre="${gn}" style="${rallyGenre===gn?`border-color:${GENRE_COLOR[gn]};color:${GENRE_COLOR[gn]};`:''}">${gn}</button>`).join('');
+  btns.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ rallyGenre=b.dataset.genre; renderTeamBuilder(); saveState(); }));
+}
+document.getElementById('rlNoBtn').addEventListener('click', ()=>{ rallyLeaderAnswer=false; renderTeamBuilder(); saveState(); });
+
+function teamSkillTotalsHTML(team){
+  const sumFields = ['skillDmgUp','normalDmgUp','skillDmgReduce','normalDmgReduce','fanCapUp','rallyCapUp'];
+  const labels = {skillDmgUp:'Skill Dmg +', normalDmgUp:'Normal Dmg +', skillDmgReduce:'Skill Dmg Taken −', normalDmgReduce:'Normal Dmg Taken −', fanCapUp:'Fan Cap +', rallyCapUp:'Rally Cap +'};
+  // Roughly the most a five-girl team can reach on each stat, so a bar shows
+  // the total against what's actually achievable rather than against 100%.
+  const CEIL = {skillDmgUp:2.2, normalDmgUp:3.6, skillDmgReduce:0.6, normalDmgReduce:0.6, fanCapUp:0.8, rallyCapUp:0.4};
+  const BAR_COLOR = {skillDmgUp:'var(--edm)', normalDmgUp:'var(--pop)',
+                     skillDmgReduce:'var(--rnb)', normalDmgReduce:'var(--rnb)',
+                     fanCapUp:'var(--gold)', rallyCapUp:'var(--hiphop)'};
+  const genreTint = GENRE_COLOR[(team[0]||{}).genre] || 'var(--gold)';
+  const chips = [];
+  sumFields.forEach(key=>{
+    let sum=0, any=false;
+    team.forEach(g=>{ if(typeof g[key]==='number'){ sum+=g[key]; any=true; } });
+    if(!any) return;
+    const pct = Math.max(3, Math.min(100, (sum / (CEIL[key]||1)) * 100));
+    chips.push(`<div class="stat-bar">
+      <div class="stat-bar-top"><span>${labels[key]}</span><b>${(sum*100).toFixed(0)}%</b></div>
+      <div class="stat-bar-track"><i data-w="${pct.toFixed(1)}" style="background:${BAR_COLOR[key]||genreTint};"></i></div>
+    </div>`);
+  });
+  // Flat per-second bonuses aren't summable (mixed text units), so list them as-is per girl that has one
+  team.forEach(g=>{
+    if(typeof g.dmgAttacking==='string') chips.push(`<div class="skill-chip"><span>${g.name} — Dmg Attacking</span><span>${g.dmgAttacking}</span></div>`);
+    if(typeof g.dmgDefending==='string') chips.push(`<div class="skill-chip"><span>${g.name} — Dmg Defending</span><span>${g.dmgDefending}</span></div>`);
+  });
+  return chips.length ? chips.join('') : '<div class="no-skills">No skill bonuses on this team.</div>';
+}
+
+function lineupBlockHTML(title, candidate, note, pool, scorer){
+  const genreNote = candidate.genreCount>=3
+    ? `<span class="genre-badge">${candidate.genreCount}× ${candidate.dominantGenre} — +${Math.round((candidate.mult-1)*100)}% team stats</span>`
+    : `<span class="genre-badge" style="opacity:0.6;">No genre bonus (mixed)</span>`;
+  const teamRawTotal = candidate.team.reduce((s,g)=>s+g.total,0);
+  const teamEffTotal = Math.round(teamRawTotal * candidate.mult);
+  const totalLine = candidate.mult > 1
+    ? `Team Total Stat: ${teamRawTotal.toLocaleString()} → ~${teamEffTotal.toLocaleString()} with genre bonus`
+    : `Team Total Stat: ${teamRawTotal.toLocaleString()}`;
+  const whaleWarnings = candidate.team.filter(g=>WHALE_GIRLS.has(g.name)).map(g=>{
+    const sub = (pool||[]).filter(o=>o.genre===g.genre && !candidate.team.some(t=>t.name===o.name) && !WHALE_GIRLS.has(o.name))
+      .sort((a,b)=>(scorer?scorer.full(b):b.total)-(scorer?scorer.full(a):a.total))[0];
+    return `<div class="lu-warn">💰 <b>${g.name}</b> is a big spender pick — hard to acquire.${sub ? ` Not maxed yet? Try <b>${sub.name}</b> instead.` : ''}</div>`;
+  }).join('');
+  const tint = GENRE_COLOR[candidate.dominantGenre] || 'var(--gold)';
+  return `<div class="lineup-block glow-block" style="--tint:${tint};">
+    <div class="lineup-head">
+      <h3 class="lineup-title">${title}</h3>
+      ${genreNote}
+    </div>
+    ${note ? `<details class="why"><summary>Why this lineup</summary><p>${note}</p></details>` : ''}
+    <div class="tags" style="margin-bottom:10px;">
+      ${candidate.team.map(g=>`<span class="tag girl-tag" data-girl="${g.name}" style="color:${GENRE_COLOR[g.genre]};border-color:${GENRE_COLOR[g.genre]}55;">${g.name}</span>`).join('')}
+    </div>
+    <div class="team-total">
+      <span class="tt-num" data-to="${candidate.mult>1?teamEffTotal:teamRawTotal}">0</span>
+      <span class="tt-lbl">${candidate.mult>1?`team total with the ${candidate.genreCount}× ${candidate.dominantGenre} bonus (${teamRawTotal.toLocaleString()} raw)`:'team total, no genre bonus'}</span>
+    </div>
+    <div class="skill-list" style="margin-top:6px;padding-top:10px;">
+      <div class="skill-list-title">Team skill totals</div>
+      ${teamSkillTotalsHTML(candidate.team)}
+    </div>
+    ${whaleWarnings}
+  </div>`;
+}
+
+function renderTeamBuilder(){
+  const pool = GIRLS.filter(g=>unlocked.has(g.name));
+  if(pool.length < 5){
+    tbEmpty.style.display='block';
+    tbResults.style.display='none';
+    rallyLeaderQ.style.display='none';
+    tbEmpty.innerHTML = pool.length===0
+      ? '<b>Add at least 5 unlocked girls</b><br>to get lineup suggestions.'
+      : `<b>${5-pool.length} more to go</b><br>Add a few more unlocked girls to unlock suggestions.`;
+    return;
+  }
+  tbEmpty.style.display='none';
+  tbResults.style.display='block';
+  rallyLeaderQ.style.display='block';
+  renderRallyGenreBtns(pool);
+
+  const p25Teams = buildFiveTeams(pool, parkingScorer);
+  const maxDmgTeam = bestLineup(pool, maxDamageScorer);
+
+  let html = '';
+
+  html += lineupBlockHTML('PvP', maxDmgTeam, 'When someone rallies your HQ. Your pool is fixed by the game, so Fan Cap and Rally Cap do nothing — pure combat skills.', pool, maxDamageScorer);
+
+  if(rallyLeaderAnswer===true){
+    const genre = rallyGenre || detectMainGenre(pool);
+    const capAvailable = countRallyCapInGenre(pool, genre);
+    const inGenreCount = pool.filter(g=>g.genre===genre).length;
+
+    if(inGenreCount < 5){
+      html += `<div class="lineup-block">
+        <div class="lineup-head"><h3 class="lineup-title">Rally lineups</h3></div>
+        <p class="lineup-note">Only ${inGenreCount} ${genre} girls unlocked. Unlock ${5-inGenreCount} more for the +25% genre bonus.</p>
+      </div>`;
+    } else {
+      html += `<div class="lineup-block"><div class="lineup-head"><h3 class="lineup-title">Rally lineups — ${genre}</h3></div>
+        <p class="lineup-note">Only your five girls fight — everyone joining just adds fans. Long fights, so Skill Damage matters as much as Normal Attack.</p></div>`;
+
+      // Which cap girls in this genre actually contribute in a fight? A girl
+      // whose only skill is capacity (Rock's Vesper/Kelly) is a dead slot in a
+      // long rally and must never be suggested.
+      const capGirlsHere = pool.filter(g=>g.genre===genre && hasRallyCap(g));
+      const usableCaps = capGirlsHere.filter(g=>offenseLong(g)>0 || defenseLong(g)>0);
+      const damageTeam = buildRallyTeam(pool, genre, 0);
+      const sameTeam = (a,b)=> !!a && !!b && a.team.map(g=>g.name).sort().join('|')===b.team.map(g=>g.name).sort().join('|');
+
+      if(capGirlsHere.length === 0){
+        html += `<div class="lineup-block"><div class="lineup-head"><h3 class="lineup-title">No rally-capacity option in ${genre}</h3></div>
+          <p class="lineup-note">No Rally Capacity girls in ${genre}, so your bus stays base size. Lean on teammates to reinforce.</p></div>`;
+        if(damageTeam) html += lineupBlockHTML(`Best ${genre} rally lineup`, damageTeam,
+          `The hardest-hitting five ${genre} girls, all one genre for the +25% stat bonus.`, pool, rallyScorer);
+      } else if(usableCaps.length === 0){
+        html += `<div class="lineup-block"><div class="lineup-head"><h3 class="lineup-title">Rally capacity not worth it in ${genre}</h3></div>
+          <p class="lineup-note">${capGirlsHere.map(g=>g.name).join(' and ')} carry capacity but no combat skills — dead slots in a long fight. Not worth the bus size.</p></div>`;
+        if(damageTeam) html += lineupBlockHTML(`Best ${genre} rally lineup`, damageTeam,
+          `The hardest-hitting five ${genre} girls, all one genre for the +25% stat bonus.`, pool, rallyScorer);
+      } else {
+        // Show every rally-cap count the pool can actually support — 0 up to 3 —
+        // rather than just two of them. Duplicates are dropped (two counts can
+        // produce the same five girls), and each option states what it costs in
+        // damage against the no-capacity build so the choice is informed.
+        const maxN = Math.min(3, usableCaps.length);
+        const variants = [];
+        for(let n = maxN; n >= 0; n--){
+          // n=0 means genuinely no capacity, so build from a pool with the cap
+          // girls removed — otherwise the best-damage five can happen to
+          // include one and the "no capacity" option is not what it says.
+          // For n>=1 force the count through (maxMode) so the user actually
+          // sees that option rather than it silently collapsing into another.
+          const t = (n === 0)
+            ? buildRallyTeam(pool.filter(g=>!hasRallyCap(g)), genre, 0, false)
+            : buildRallyTeam(pool, genre, n, true);
+          if(!t) continue;
+          if(t.capCount !== n) continue;                          // couldn't hit that count
+          if(variants.some(v => sameTeam(v.team, t))) continue;   // same five girls
+          variants.push({n, team: t, caps: t.capCount, cap: t.capTotal});
+        }
+        // Rank each by pure fighting power so we can quote the trade-off honestly.
+        const power = t => teamValue(t.team, t.mult, rallyScorer.params.c,
+                                     rallyScorer.params.fanW, rallyScorer.params.statW);
+        const noCapVariant = variants.find(v => v.caps === 0);
+        const basePower = noCapVariant ? power(noCapVariant.team) : Math.max(...variants.map(v=>power(v.team)));
+
+        variants.forEach(v => {
+          const lossPct = basePower ? Math.round((1 - power(v.team)/basePower) * 100) : 0;
+          let title, note;
+          if(v.caps === 0){
+            title = 'No rally capacity — maximum damage';
+            note  = `Hardest-hitting five. Right when you out-stat your target, or your group reinforces non-stop so bus size never binds.`;
+          } else {
+            title = `${v.caps} rally-cap girl${v.caps>1?'s':''} — +${Math.round(v.cap*100)}% bus`;
+            note  = lossPct > 0
+              ? `+${Math.round(v.cap*100)}% bus for about ${lossPct}% less damage than the no-capacity build. ${v.caps>=3?'Take this when you are the underdog attacking an HQ or club — a defender holds up to 32M, a normal bus only 12-20M.':'A middle option: real bus size without gutting the damage.'}`
+              : `+${Math.round(v.cap*100)}% bus at no damage cost — these cap girls earn their slots outright.`;
+          }
+          html += lineupBlockHTML(title, v.team, note, pool, rallyScorer);
+        });
+
+        if(variants.length > 1){
+          html += `<div class="lineup-block"><div class="lineup-head"><h3 class="lineup-title">Which one?</h3></div>
+            <div class="skill-list" style="padding-top:10px;">
+              <div class="skill-list-title">Bus size vs damage</div>
+              ${variants.map(v=>{
+                const loss = basePower ? Math.round((1 - power(v.team)/basePower)*100) : 0;
+                return `<div class="skill-chip"><span>${v.caps} cap girl${v.caps===1?'':'s'} · +${Math.round(v.cap*100)}% bus</span><span>${loss>0?`−${loss}% damage`:'no damage lost'}</span></div>`;
+              }).join('')}
+            </div>
+            <details class="why"><summary>How to pick</summary><p>
+              Capacity only matters while your bus is actually running dry. If your group refills you all fight, take the damage build. If you are attacking someone who can out-last you, buy the bus — losing a fight with 20% more damage and an empty bus is still losing.
+            </p></details>
+          </div>`;
+        }
+      }
+    }
+  }
+
+  html += `<div class="lineup-block"><div class="lineup-head"><h3 class="lineup-title">P25 — 5 Teams</h3></div>
+    <p class="lineup-note">Five teams, no girl twice. Short fights, so stats and Normal Attack lead. Listed strongest first — reorder in-game as you like.</p>
+    ${p25Teams.map((t,i)=>lineupBlockHTML(`Team ${i+1}`, t, '', pool, parkingScorer)).join('')}
+    ${p25Teams.length<5 ? `<p class="lineup-note">Only enough unlocked girls for ${p25Teams.length} full team(s) — unlock more (25 total needed) for a complete 5-team squad.</p>` : ''}
+  </div>`;
+
+  const parkingTeam = bestLineup(pool, parkingScorer);
+  html += lineupBlockHTML('Parking Wars', parkingTeam,
+    'Short fights, so stats and Normal Attack decide it. Fan Cap counts here — fans are your health bar.', pool, parkingScorer);
+
+  tbResults.innerHTML = html;
+  animateResults(tbResults);
+}
+
+// ---- Harmony assistant ----
+//
+// Pairing rules, straight from the game:
+//   - only abroad girls (Tokyo/Bali/Rome) and Stock Auction girls can RECEIVE
+//   - an assistant must be the same genre and rank BELOW the receiver
+//   - Stock Auction sits above every season, so it receives but never assists
+//   - Burj / Anniversary / Discord rank below everyone: they assist anybody
+//     abroad, and can never receive
+const ABROAD_MAPS = new Set(['Tokyo','Bali','Rome']);
+function harmonyRank(g){
+  if(g.map === 'Stock Auction') return 99;
+  if(ABROAD_MAPS.has(g.map)) return g.season || 0;
+  return 0;                       // Burj / Anniversary / Discord
+}
+function canReceiveHarmony(g){
+  return g.map === 'Stock Auction' || ABROAD_MAPS.has(g.map);
+}
+function canAssist(assistant, receiver){
+  return assistant.genre === receiver.genre
+      && assistant.name !== receiver.name
+      && canReceiveHarmony(receiver)
+      && harmonyRank(assistant) < harmonyRank(receiver);
+}
+// Cheapest girls to give up go first: someone who can never receive Harmony
+// loses nothing by being assigned, whereas burning an abroad girl throws away
+// a girl who could have been a receiver herself.
+// Levelling cost feeds the choice silently: between two girls who are equally
+// expendable, prefer the one who is cheaper to take to 160, since a newer-season
+// girl carries up to double the EXP bill for the same levels.
+function assistantCost(g){
+  let cost = canReceiveHarmony(g) ? 100 : 0;     // could she have been a receiver?
+  cost += workingSkills(g, false) * 10;          // how much does the lineup lose?
+  cost += (g.total / 10000);                     // and her raw stats
+  // Newer-season girls cost up to double the EXP to reach 160, so between two
+  // otherwise equal candidates the cheaper one wins. Small weight — it breaks
+  // ties without overriding how expendable she actually is.
+  cost += expSurcharge(g) * 8;
+  return cost;
+}
+
+let harmonyGenre = null;
+
+// ---- Artist levelling costs ----
+// EXP needed to go from level L to L+1, from the community resource sheet
+// (credit @SrCuentaOficial). Index 0 is level 1 -> 2.
+const EXP_PER_LEVEL = [100, 200, 300, 400, 500, 600, 700, 800, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 12000, 14000, 16000, 18000, 20000, 25000, 30000, 35000, 40000, 45000, 50000, 65000, 70000, 75000, 80000, 85000, 90000, 95000, 110000, 120000, 130000, 190000, 200000, 210000, 220000, 230000, 240000, 250000, 260000, 270000, 280000, 380000, 400000, 450000, 500000, 550000, 600000, 650000, 700000, 750000, 800000, 1000000, 1050000, 1100000, 1150000, 1200000, 1250000, 1300000, 1350000, 1400000, 1450000, 1500000, 1550000, 1600000, 1650000, 1700000, 1750000, 1800000, 1850000, 1900000, 2000000, 2100000, 2200000, 2300000, 2400000, 2500000, 2600000, 2700000, 2800000, 2900000, 3000000, 3100000, 3200000, 3300000, 3400000, 3500000, 3600000, 3700000, 3800000, 3900000, 4000000, 4100000, 4200000, 4300000, 4400000, 4500000, 4600000, 4700000, 4800000, 4900000, 5000000, 5100000, 5200000, 5300000, 5400000, 5500000, 5600000, 5700000, 5800000, 5900000, 6000000, 6100000, 6200000, 6300000, 6400000, 6500000, 6600000, 6700000, 6800000, 6900000, 7000000, 7100000, 7200000, 7300000, 7400000, 7500000, 7600000, 7700000, 7800000, 7900000, 8000000, 12000000, 14000000, 16000000, 18000000, 20000000, 25000000, 30000000, 35000000, 40000000, 45000000, 55000000, 65000000, 75000000, 85000000, 95000000, 110000000, 125000000, 140000000, 155000000, 170000000];
+// Newer girls cost more EXP for the same levels. The sheet's "increased EXP
+// cost" tracks the abroad season exactly: seasons 1-2 carry no surcharge and it
+// climbs to double for season 6. Non-abroad girls carry none.
+const SEASON_EXP_SURCHARGE = {1:0.0, 2:0.0, 3:0.2, 4:0.44, 5:0.728, 6:1.0};
+function expSurcharge(g){ return g ? (SEASON_EXP_SURCHARGE[g.season] || 0) : 0; }
+function expToLevel(girl, from, to){
+  if(to <= from) return 0;
+  let base = 0;
+  for(let l = from; l < to && l <= EXP_PER_LEVEL.length; l++) base += EXP_PER_LEVEL[l-1] || 0;
+  return Math.round(base * (1 + expSurcharge(girl)));
+}
+// Promotion Cards are charged as a LUMP at gate levels, not spread per level.
+// At level 100 you pay 1,200 cards to unlock 101-105; at 105 you pay 1,200
+// again, and so on. So a girl going 151 -> 160 crosses only the gate at 155 and
+// pays 3,200 — not a per-level share of the band, which is what an earlier
+// version wrongly did.
+//
+// [gate level, cards charged there]. Summing every gate reproduces the sheet's
+// totals exactly: 9,500 to reach 120, 15,900 to 140, 28,700 to 160.
+const PROMO_GATES = [[20, 50], [30, 100], [40, 200], [50, 450], [60, 700], [80, 800], [85, 800], [90, 800], [95, 800], [100, 1200], [105, 1200], [110, 1200], [115, 1200], [120, 1600], [125, 1600], [130, 1600], [135, 1600], [140, 3200], [145, 3200], [150, 3200], [155, 3200]];
+function promoToLevel(from, to){
+  let n = 0;
+  PROMO_GATES.forEach(([lvl, cards])=>{ if(from <= lvl && lvl < to) n += cards; });
+  return n;
+}
+function fmtExp(n){
+  if(n >= 1e9) return (n/1e9).toFixed(2) + 'B';
+  if(n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  if(n >= 1e3) return Math.round(n/1e3) + 'K';
+  return String(n);
+}
+
+// Which lineup are we building Harmony around? Each option names a real team
+// from the builder, so assistants are chosen to protect the team you actually
+// field rather than a generic "best five".
+// Team options are built from what the player's own selection can actually
+// support. Two rally-cap girls means "1" and "max" are the only distinct
+// lineups — offering "2" as well would just repeat "max". Options that produce
+// an identical five are dropped.
+function harmonyTeamOptions(inGenre){
+  const opts = [
+    {id:'pvp',     label:'PvP / HQ defence', team:bestFive(inGenre, maxDamageScorer.params)},
+    {id:'parking', label:'Parking & P25',    team:bestFive(inGenre, parkingScorer.params)},
+  ];
+  const usableCaps = inGenre.filter(g=>hasRallyCap(g) && (offenseLong(g)>0 || defenseLong(g)>0));
+  const maxN = Math.min(3, usableCaps.length);
+  const rallies = [];
+  for(let n = 0; n <= maxN; n++){
+    const built = (n === 0)
+      ? buildRallyTeam(inGenre.filter(g=>!hasRallyCap(g)), harmonyGenre, 0, false)
+      : buildRallyTeam(inGenre, harmonyGenre, n, true);
+    if(!built || built.capCount !== n) continue;
+    rallies.push({n, team: built.team});
+  }
+  const seen = new Set(opts.map(o=>o.team.map(g=>g.name).sort().join('|')));
+  rallies.forEach((r,i)=>{
+    const key = r.team.map(g=>g.name).sort().join('|');
+    if(seen.has(key)) return;              // identical five already offered
+    seen.add(key);
+    const isMax = i === rallies.length - 1 && r.n > 0;
+    opts.push({
+      id: 'rally'+r.n,
+      label: r.n === 0 ? 'Rally — no rally-cap'
+           : isMax     ? 'Rally — max rally-cap'
+           : `Rally — ${r.n} rally-cap`,
+      team: r.team
+    });
+  });
+  return opts;
+}
+let harmonyTeamId = 'pvp';
+
+// Works out the current Harmony plan: which girls are assigned as assistants,
+// and to whom. Shared so the PEAK tab can see the same assignments and give
+// advice that fits them, instead of the two tabs contradicting each other.
+function currentHarmonyPlan(){
+  const pool = GIRLS.filter(g => unlocked.has(g.name));
+  if(!pool.length || !harmonyGenre) return null;
+  applyGenreWash(box, harmonyGenre);
+  const inGenre = pool.filter(g=>g.genre===harmonyGenre);
+  if(inGenre.length < 5) return null;
+  const opts = harmonyTeamOptions(inGenre);
+  const teamDef = opts.find(t=>t.id===harmonyTeamId) || opts[0];
+  const mainTeam = teamDef.team;
+  const teamNames = new Set(mainTeam.map(g=>g.name));
+  const receivers = mainTeam.filter(canReceiveHarmony)
+    .sort((a,b)=> (harmonyRank(b)-harmonyRank(a)) || (b.total-a.total));
+  const taken = new Set(), assignments = [];
+  receivers.forEach(recv=>{
+    const picks = inGenre
+      .filter(a => canAssist(a,recv) && !teamNames.has(a.name) && !taken.has(a.name))
+      .sort((a,b)=> assistantCost(a)-assistantCost(b))
+      .slice(0,3);
+    picks.forEach(p=>taken.add(p.name));
+    if(picks.length) assignments.push({receiver:recv, assistants:picks});
+  });
+  return {genre:harmonyGenre, teamLabel:teamDef.label, mainTeam, receivers, assignments,
+          assistantNames:new Set([...taken])};
+}
+
+function renderHarmony(){
+  const pool = GIRLS.filter(g => unlocked.has(g.name));
+  const box  = document.getElementById('hmResults');
+  const btns = document.getElementById('hmGenreBtns');
+  const tbtns= document.getElementById('hmTeamBtns');
+  if(!box || !btns) return;
+
+  const genres = [...new Set(pool.map(g=>g.genre))].sort();
+  // Only ask which genre when the user actually owns more than one.
+  const genreQ = document.getElementById('hmGenreQ');
+  if(genres.length === 1){
+    harmonyGenre = genres[0];
+    if(genreQ) genreQ.style.display = 'none';
+  } else {
+    if(genreQ) genreQ.style.display = 'block';
+    btns.innerHTML = genres.length
+      ? genres.map(gn=>`<button class="ghost" data-genre="${gn}" style="${harmonyGenre===gn?`border-color:${GENRE_COLOR[gn]};color:${GENRE_COLOR[gn]};`:''}">${gn}</button>`).join('')
+      : '<span class="lineup-note" style="margin:0;">Tick your unlocked girls in Build my team first.</span>';
+    btns.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+      harmonyGenre = b.dataset.genre; renderHarmony(); saveState();
+    }));
+  }
+
+
+  if(!pool.length){ box.innerHTML = emptyState('Nothing to work with yet', "Tick the girls you've unlocked in Build my team.", 'tick'); return; }
+  if(!harmonyGenre || !genres.includes(harmonyGenre)){ box.innerHTML = emptyState('Pick a genre above', 'Then you\'ll see who can assist whom.', 'list'); return; }
+
+  const inGenre = pool.filter(g=>g.genre===harmonyGenre);
+  const opts = inGenre.length>=5 ? harmonyTeamOptions(inGenre) : [];
+  if(tbtns){
+    tbtns.innerHTML = opts.map(t=>
+      `<button class="ghost" data-team="${t.id}" style="${harmonyTeamId===t.id?'border-color:var(--gold);color:var(--gold);':''}">${t.label}</button>`).join('');
+    tbtns.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+      harmonyTeamId = b.dataset.team; renderHarmony(); saveState();
+    }));
+  }
+  const teamDef = opts.find(t=>t.id===harmonyTeamId) || opts[0];
+  const mainTeam = teamDef ? teamDef.team : inGenre;
+  const teamNames = new Set(mainTeam.map(g=>g.name));
+
+  // Only girls IN the chosen lineup are worth feeding — Harmony exists to make
+  // the team you field stronger, not to buff a girl sitting on the bench.
+  const receivers = mainTeam.filter(canReceiveHarmony)
+    .sort((a,b)=> (harmonyRank(b) - harmonyRank(a)) || (b.total - a.total));
+
+  let html = `<div class="lineup-block"><div class="lineup-head">
+      <h3 class="lineup-title">${teamDef.label} — ${harmonyGenre}</h3></div>
+    <p class="lineup-note">${mainTeam.map(g=>g.name).join(', ')} — picked on skills and stats, and kept out of the assistant pool. A girl who can't receive Harmony can still be one of your best five.</p></div>`;
+
+  const cannotReceive = mainTeam.filter(g=>!canReceiveHarmony(g));
+  if(!receivers.length){
+    html += `<div class="lineup-block"><div class="lineup-head"><h3 class="lineup-title">Nobody in this lineup can receive</h3></div>
+      <p class="lineup-note">Every girl in this team comes from Burj, Anniversary or Discord, which rank below everyone and can never receive Harmony. You would need an abroad or Stock Auction girl in the lineup first.</p></div>`;
+    box.innerHTML = html; animateResults(box); return;
+  }
+
+  // A girl spent as an assistant is gone — she cannot also be fed herself, and
+  // cannot be handed to a second main girl.
+  const taken = new Set();
+  receivers.forEach(recv=>{
+    const options = inGenre
+      .filter(a => canAssist(a, recv) && !teamNames.has(a.name) && !taken.has(a.name))
+      .sort((a,b)=> assistantCost(a) - assistantCost(b));
+    const picks = options.slice(0,3);
+    picks.forEach(p=>taken.add(p.name));
+
+    html += `<div class="lineup-block">
+      <div class="lineup-head">
+        <h3 class="lineup-title">${recv.name}</h3>
+        <span class="genre-badge">${recv.map}${recv.season?` · season ${recv.season}`:''}</span>
+      </div>`;
+    if(!picks.length){
+      const anyLegal = inGenre.some(a=>canAssist(a,recv));
+      html += `<p class="lineup-note">${anyLegal
+        ? `No SSR left for her — the ${harmonyGenre} girls who could legally assist are either in this lineup or already assigned above.`
+        : `No SSR of yours can assist her — every ${harmonyGenre} girl you own ranks the same or higher.`}
+        <b>Assign your best R and SR girls to her instead.</b> They do the same job, cost you nothing in a lineup, and should always be spent before an SSR.</p>`;
+    } else {
+      html += `<div class="tags" style="margin-bottom:10px;">
+        ${picks.map(p=>`<span class="tag girl-tag" data-girl="${p.name}" style="color:${GENRE_COLOR[p.genre]};border-color:${GENRE_COLOR[p.genre]}55;">${p.name}</span>`).join('')}
+      </div>
+      <div class="skill-list" style="padding-top:10px;">
+        <div class="skill-list-title">Slot by slot</div>
+        ${picks.map((p,i)=>`<div class="skill-chip">
+           <span>Slot ${i+1} (unlocks at level ${[120,140,160][i]})</span>
+           <span>${p.name} — ${p.map}${p.season?` S${p.season}`:''}</span>
+         </div>`).join('')}
+      </div>
+      <details class="why"><summary>What this costs you</summary><p>
+        ${picks.map(p=>p.name).join(', ')} ${picks.length>1?'are':'is'} locked out of P25, parking, HQ defence and club work for good.
+        Get each assistant to <b>PEAK 80</b> if you can: it lifts sync from 75% to 100%, worth more than any amount of PEAK below that. Level 160 gives the most, but a level 140 assistant is still perfectly fine.
+      </p></details>`;
+    }
+    html += `</div>`;
+  });
+
+  if(cannotReceive.length){
+    html += `<div class="lineup-block">
+      <div class="lineup-head"><h3 class="lineup-title">Can't receive Harmony</h3></div>
+      <div class="tags" style="margin-bottom:10px;">
+        ${cannotReceive.map(g=>`<span class="tag girl-tag" data-girl="${g.name}" style="color:${GENRE_COLOR[g.genre]};border-color:${GENRE_COLOR[g.genre]}55;">${g.name}</span>`).join('')}
+      </div>
+      <p class="lineup-note">${cannotReceive.map(g=>g.name+' ('+g.map+')').join(', ')} — ${cannotReceive.length===1?'she is':'they are'} in your lineup on merit, but Burj, Anniversary and Discord girls can never take an assistant. Nothing to do here; keep ${cannotReceive.length===1?'her':'them'} playing.</p>
+    </div>`;
+  }
+
+  applyGenreWash(box, harmonyGenre);
+  box.innerHTML = html;
+  animateResults(box);
+}
+
+// The opening sequence: the title rises into place, a stage light crosses it,
+// the equaliser bounces once and settles into a divider, and the menu cards
+// deal in. One orchestrated moment on first paint — it never replays.
+function playOpening(){
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const title = document.getElementById('heroTitle');
+  const spot  = document.getElementById('heroSpot');
+  const eq    = document.getElementById('heroEq');
+  const grid  = document.querySelector('.menu-grid');
+  if(reduce){
+    if(title) title.classList.add('go');
+    if(grid) grid.classList.add('dealt');
+    return;
+  }
+  if(title) title.classList.add('go');
+  setTimeout(()=>{ if(spot) spot.classList.add('go'); }, 260);
+  setTimeout(()=>{ if(eq) eq.classList.add('go'); }, 420);
+  setTimeout(()=>{ if(grid) grid.classList.add('dealt'); }, 180);
+}
+
+// Animates the team totals and stat bars whenever new lineups appear. Motion
+// answers the user's action (they asked for a team), rather than running on its
+// own — and the reduced-motion media query above turns it all off if the OS
+// asks for that.
+function animateResults(root){
+  const scope = root || document;
+  scope.querySelectorAll('.tt-num').forEach(el=>{
+    if(el.dataset.done) return;
+    el.dataset.done = '1';
+    const target = parseInt(el.dataset.to, 10) || 0;
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduce){ el.textContent = target.toLocaleString(); return; }
+    const t0 = performance.now(), dur = 850;
+    (function step(t){
+      const p = Math.min(1, (t - t0) / dur);
+      const e = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * e).toLocaleString();
+      if(p < 1) requestAnimationFrame(step);
+    })(performance.now());
+  });
+  scope.querySelectorAll('.stat-bar-track i').forEach((b,i)=>{
+    if(b.dataset.done) return;
+    b.dataset.done = '1';
+    setTimeout(()=>{ b.style.width = b.dataset.w + '%'; }, 60*i + 140);
+  });
+}
+
+// Tints a single-genre view with that genre's colour — strongest at the top,
+// gone a third of the way down. Only used where ONE genre is active: on Build
+// my team several lineups show at once and this would fight the per-block glow.
+// GENRE_COLOR holds CSS variables like var(--edm), which can't have an alpha
+// suffix appended — 'var(--edm)22' is invalid and silently renders nothing.
+// These are the same colours as raw hex so they can take an alpha channel.
+const GENRE_HEX = {'Rock':'#e63950','R&B':'#9b6bd9','Pop':'#ff4fa3','HipHop':'#e8752c','EDM':'#2bd9c9'};
+function applyGenreWash(el, genre){
+  if(!el) return;
+  const hex = GENRE_HEX[genre];
+  if(!hex){ el.classList.remove('genre-wash'); el.style.removeProperty('--wash-tint'); return; }
+  el.classList.add('genre-wash');
+  el.style.setProperty('--wash-tint', hex + '2e');
+}
+
+// An empty screen is a chance to say what to do next, not just report nothing.
+const ES_ICONS = {
+  list: `<path d="M4 7h16M4 12h16M4 17h10" stroke-linecap="round"/>`,
+  tick: `<path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/>`,
+  search: `<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4" stroke-linecap="round"/>`,
+  warn: `<path d="M12 8v5M12 16.5v.5" stroke-linecap="round"/><circle cx="12" cy="12" r="9"/>`,
+};
+function emptyState(title, detail, icon){
+  return `<div class="empty-state">
+    <div class="es-mark">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="1.6">
+        ${ES_ICONS[icon||'list']}
+      </svg>
+    </div>
+    <b>${title}</b>
+    <span>${detail}</span>
+  </div>`;
+}
+
+// ---- Girl skill popover ----
+// Click a girl's name anywhere in a lineup to see her skills. Clicking the same
+// name again, a different name, or anywhere else closes it.
+let openGirlTag = null;
+function closeGirlPop(){
+  const pop = document.getElementById('girlPop');
+  if(pop) pop.style.display = 'none';
+  if(openGirlTag){ openGirlTag.classList.remove('open'); openGirlTag = null; }
+}
+function showGirlPop(tagEl, girl){
+  const pop = document.getElementById('girlPop');
+  if(!pop || !girl) return;
+  const rows = [
+    ['Skill Damage',       girl.skillDmgUp,      v=>Math.round(v*100)+'%'],
+    ['Normal Attack',      girl.normalDmgUp,     v=>Math.round(v*100)+'%'],
+    ['Skill Reduction',    girl.skillDmgReduce,  v=>Math.round(v*100)+'%'],
+    ['Normal Reduction',   girl.normalDmgReduce, v=>Math.round(v*100)+'%'],
+    ['Fan Cap',            girl.fanCapUp,        v=>Math.round(v*100)+'%'],
+    ['Rally Capacity',     girl.rallyCapUp,      v=>Math.round(v*100)+'%'],
+    ['Damage (attacking)', girl.dmgAttacking,    v=>String(v)],
+    ['Damage (defending)', girl.dmgDefending,    v=>String(v)],
+  ].filter(r=>r[1] !== null && r[1] !== undefined && r[1] !== '');
+  pop.innerHTML =
+    `<div class="gp-name">${girl.name}</div>
+     <div class="gp-meta" style="color:${GENRE_COLOR[girl.genre]};">${girl.genre} · ${girl.type}${girl.map?' · '+girl.map:''}${girl.season?' S'+girl.season:''}</div>
+     <div class="gp-row"><span>Sing / Dance</span><span>${girl.sing.toLocaleString()} / ${girl.dance.toLocaleString()}</span></div>
+     <div class="gp-row"><span>Total</span><span>${girl.total.toLocaleString()}</span></div>
+     ${rows.length ? rows.map(r=>`<div class="gp-row"><span>${r[0]}</span><span>${r[2](r[1])}</span></div>`).join('')
+                   : '<div class="gp-none" style="margin-top:8px;">No skill bonuses listed.</div>'}`;
+  pop.style.display = 'block';
+  const r = tagEl.getBoundingClientRect();
+  const w = pop.offsetWidth || 240;
+  let left = r.left + window.scrollX;
+  const maxLeft = window.scrollX + document.documentElement.clientWidth - w - 12;
+  if(left > maxLeft) left = Math.max(window.scrollX + 12, maxLeft);
+  pop.style.left = left + 'px';
+  pop.style.top  = (r.bottom + window.scrollY + 8) + 'px';
+  tagEl.classList.add('open');
+  openGirlTag = tagEl;
+}
+document.addEventListener('click', function(e){
+  const tag = e.target && e.target.closest ? e.target.closest('.girl-tag') : null;
+  if(tag){
+    if(openGirlTag === tag){ closeGirlPop(); return; }   // same name closes it
+    closeGirlPop();
+    showGirlPop(tag, GIRLS.find(g=>g.name === tag.dataset.girl));
+    e.stopPropagation();
+    return;
+  }
+  if(!(e.target && e.target.closest && e.target.closest('#girlPop'))) closeGirlPop();
+});
+window.addEventListener('resize', closeGirlPop);
+window.addEventListener('scroll', closeGirlPop, true);
+
+// ---- Levelling cost calculator ----
+function renderLevelCalc(){
+  const res = document.getElementById('lvResult');
+  if(!res) return;
+  const name = (document.getElementById('lvGirl')?.value || '').trim();
+  const from = parseInt(document.getElementById('lvFrom')?.value, 10);
+  const to   = parseInt(document.getElementById('lvTo')?.value, 10);
+
+  if(!name && isNaN(from) && isNaN(to)){ res.innerHTML = ''; return; }
+  if(!name){ res.innerHTML = emptyState('Enter a girl\'s name', 'Then a level to go from and to.', 'search'); return; }
+
+  const girl = GIRLS.find(g=>g.name.toLowerCase() === name.toLowerCase())
+            || GIRLS.find(g=>g.name.toLowerCase().startsWith(name.toLowerCase()));
+  if(!girl){ res.innerHTML = emptyState(`No girl called "${name}"`, 'Check the spelling against the roster.', 'search'); return; }
+
+  const f = isNaN(from) ? 1 : from;
+  const t = isNaN(to) ? 160 : to;
+  if(t <= f){ res.innerHTML = emptyState('Target level is too low', 'It needs to be higher than the level she\'s at now.', 'warn'); return; }
+
+  const exp   = expToLevel(girl, f, t);
+  const base  = expToLevel({season:null}, f, t);
+  const cards = promoToLevel(f, t);
+  const sur   = expSurcharge(girl);
+
+  res.innerHTML = `<div class="reco">
+    <div class="reco-eyebrow">${girl.name} · ${girl.map}${girl.season?' season '+girl.season:''}</div>
+    <div class="reco-main">Level ${f} → ${t}</div>
+    <div class="skill-list" style="padding-top:12px;">
+      <div class="skill-chip"><span>Artist EXP</span><span>${exp.toLocaleString()}</span></div>
+      <div class="skill-chip"><span>Promotion Cards</span><span>${cards.toLocaleString()}</span></div>
+      ${sur>0 ? `<div class="skill-chip"><span>Season surcharge</span><span>+${Math.round(sur*100)}% on EXP (base ${base.toLocaleString()})</span></div>`
+              : `<div class="skill-chip"><span>Season surcharge</span><span>none — cheap to level</span></div>`}
+    </div>
+  </div>`;
+}
+
+// ---- PEAK Assistant ----
+// Each PEAK level costs 100 photos. Milestones award stacking buffs — every
+// girl that reaches a milestone grants its bonus again (no cap), so the
+// optimizer treats each girl's next milestone as an independent purchase.
+const PEAK_MILESTONES = [
+  {lvl:5,   stat:'sing',  scope:'all',   pct:0.5},
+  {lvl:10,  stat:'dance', scope:'all',   pct:0.5},
+  {lvl:40,  stat:'sing',  scope:'genre', pct:3},
+  {lvl:70,  stat:'dance', scope:'genre', pct:3},
+  {lvl:100, stat:'sing',  scope:'all',   pct:1.5},
+  {lvl:150, stat:'dance', scope:'all',   pct:1.5},
+  {lvl:300, stat:'sing',  scope:'genre', pct:12},
+  {lvl:400, stat:'dance', scope:'genre', pct:12},
+  {lvl:600, stat:'sing',  scope:'all',   pct:5},
+  {lvl:800, stat:'dance', scope:'all',   pct:5},
+];
+const PHOTOS_PER_LEVEL = 100;
+const PEAK_GENRES = ['Rock','Pop','R&B','HipHop','EDM'];
+
+let peakGirls = [];
+let pkTargets = new Set();
+
+function computeBuffs(girls){
+  const buffs = {};
+  PEAK_GENRES.forEach(g=>buffs[g]={sing:0, dance:0});
+  girls.forEach(girl=>{
+    PEAK_MILESTONES.forEach(m=>{
+      if(girl.level >= m.lvl){
+        if(m.scope==='all') PEAK_GENRES.forEach(g=>buffs[g][m.stat]+=m.pct);
+        else if(buffs[girl.genre]) buffs[girl.genre][m.stat]+=m.pct;
+      }
+    });
+  });
+  return buffs;
+}
+
+// A genre-scoped bonus only counts if that genre is one they're targeting;
+// an all-scoped bonus counts once per targeted genre.
+function milestoneValue(m, girlGenre, targets){
+  if(m.scope==='all') return m.pct * Math.max(targets.size,1);
+  return targets.has(girlGenre) ? m.pct : 0;
+}
+
+// Greedy: repeatedly buy whichever girl's NEXT milestone gives the most buff
+// per photo. Because bonuses stack without a cap, this marginal-value approach
+// finds the cheapest path to the biggest total buff.
+function planPeak(girls, targets, budget){
+  const state = girls.map((g,i)=>({...g, idx:i}));
+  const steps = [];
+  let spent = 0;
+  const cap = budget && budget>0 ? budget : Infinity;
+  // Harmony assistants have an extra milestone the buff table knows nothing
+  // about: at PEAK 80 their sync rate goes 75% -> 100%, so they hand over a
+  // third more Sing and Dance. It is treated as a real step with its own value
+  // so it competes for photos on the same footing as the stat milestones.
+  const assistantOf = harmonyAssistantMap();
+  // What the PEAK 80 sync jump is actually worth, in the same units the stat
+  // milestones use (percentage points of team stats).
+  //
+  // Measured from two of the user's own readings — same girl stats, same level
+  // 140, only PEAK differing: peak 40 gave 47,930 total, peak 80 gave 66,100.
+  // So the jump is worth about +18,000 stats ONCE, to ONE girl. Expressed
+  // against a reference team total that is roughly 0.6 percentage points —
+  // far below a 3% genre milestone, which applies to the whole team.
+  //
+  // An earlier version guessed 9 here, which wrongly pushed the sync jump to
+  // the top of the plan. It belongs near the bottom: worth doing eventually,
+  // never worth doing before the stat milestones.
+  const SYNC_STAT_GAIN = 18000;      // measured, see above
+  const SYNC_REF_TEAM  = 3000000;    // reference team stat total
+  const SYNC_VALUE = (SYNC_STAT_GAIN / SYNC_REF_TEAM) * 100;   // ≈ 0.6 points
+
+  for(let iter=0; iter<400; iter++){
+    let best=null, bestEff=-1;
+    state.forEach(girl=>{
+      // candidate 1: the next ordinary stat milestone
+      const next = PEAK_MILESTONES.find(m=>m.lvl > girl.level);
+      if(next){
+        const cost = (next.lvl - girl.level) * PHOTOS_PER_LEVEL;
+        const val = milestoneValue(next, girl.genre, targets);
+        if(val>0 && cost>0){
+          const eff = val / cost;
+          if(eff > bestEff){ bestEff=eff; best={girl, next, cost, val, sync:false}; }
+        }
+      }
+      // candidate 2: the Harmony sync jump, only for an assigned assistant
+      if(girl.name && assistantOf.has(girl.name) && girl.level < HARMONY_SYNC_STEP){
+        const cost = (HARMONY_SYNC_STEP - girl.level) * PHOTOS_PER_LEVEL;
+        const eff = SYNC_VALUE / cost;
+        if(cost>0 && eff > bestEff){
+          bestEff = eff;
+          best = {girl, cost, val:SYNC_VALUE, sync:true,
+                  next:{lvl:HARMONY_SYNC_STEP, stat:'sync', scope:'harmony', pct:25}};
+        }
+      }
+    });
+    if(!best) break;
+    if(spent + best.cost > cap) break;
+    spent += best.cost;
+    steps.push({
+      genre: best.girl.genre, name: best.girl.name || null,
+      from: best.girl.level, to: best.next.lvl,
+      cost: best.cost, gain: best.next.pct, stat: best.next.stat,
+      scope: best.next.scope, sync: !!best.sync,
+      assists: best.sync ? assistantOf.get(best.girl.name) : null,
+      effPer1k: (best.val/best.cost)*1000, cumulative: spent,
+    });
+    best.girl.level = best.next.lvl;
+  }
+  return {steps, spent, finalGirls: state};
+}
+
+const pkGenreSel = document.getElementById('pkGenreSel');
+PEAK_GENRES.forEach(g=>{
+  const o=document.createElement('option'); o.value=g; o.textContent=g; pkGenreSel.appendChild(o);
+});
+const pkTargetGenresEl = document.getElementById('pkTargetGenres');
+PEAK_GENRES.forEach(g=>{
+  const b=document.createElement('button');
+  b.className='ghost'; b.textContent=g; b.dataset.genre=g;
+  b.addEventListener('click', ()=>{
+    if(pkTargets.has(g)){ pkTargets.delete(g); b.style.borderColor=''; b.style.color=''; }
+    else { pkTargets.add(g); b.style.borderColor=GENRE_COLOR[g]; b.style.color=GENRE_COLOR[g]; }
+    renderPeak();
+  });
+  pkTargetGenresEl.appendChild(b);
+});
+
+function pkAddGroup(){
+  const genre = pkGenreSel.value;
+  const name = document.getElementById('pkNameInput').value.trim();
+  let count = parseInt(document.getElementById('pkCountInput').value,10);
+  const level = parseInt(document.getElementById('pkLevelInput').value,10);
+  // A named entry is a single specific girl, so default her count to 1.
+  if(name && (isNaN(count) || count<1)) count = 1;
+  if(!genre || isNaN(count) || count<1 || isNaN(level) || level<0) return;
+  if(name){
+    peakGirls.push({genre, level, name});
+  } else {
+    for(let i=0;i<count;i++) peakGirls.push({genre, level, name:null});
+  }
+  document.getElementById('pkCountInput').value='';
+  document.getElementById('pkLevelInput').value='';
+  document.getElementById('pkNameInput').value='';
+  document.getElementById('pkCountInput').focus();
+  renderPeak();
+}
+document.getElementById('pkAddBtn').addEventListener('click', pkAddGroup);
+['pkCountInput','pkLevelInput','pkNameInput'].forEach(id=>{
+  document.getElementById(id).addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ e.preventDefault(); pkAddGroup(); }
+  });
+});
+document.getElementById('pkClearBtn').addEventListener('click', ()=>{ peakGirls=[]; renderPeak(); });
+document.getElementById('pkBudget').addEventListener('input', renderPeak);
+
+// Cross-checks the PEAK entries against the Harmony plan. A girl being used as
+// an assistant has a PEAK target the normal optimiser knows nothing about:
+// reaching PEAK 80 lifts her sync rate from 75% to 100%, so she hands over a
+// third more of everything. That is usually the best photo spend on the board,
+// and it never shows up in the team-buff plan below.
+const HARMONY_SYNC_STEP = 80;
+// Which of the PEAK entries are currently serving as Harmony assistants, and
+// who they assist. The PEAK plan uses this to insert the sync-rate milestone
+// (PEAK 80 => 75% sync becomes 100%) as a real step in the table, since the
+// normal team-buff maths knows nothing about it.
+function harmonyAssistantMap(){
+  const plan = currentHarmonyPlan();
+  const map = new Map();
+  if(!plan) return map;
+  plan.assignments.forEach(a=>a.assistants.forEach(x=>map.set(x.name, a.receiver.name)));
+  return map;
+}
+function harmonyPeakAdvice(){
+  const map = harmonyAssistantMap();
+  if(!map.size) return '';
+  const below = peakGirls.filter(pg=>pg.name && map.has(pg.name) && pg.level < HARMONY_SYNC_STEP);
+  if(below.length) return `<b>PEAK 80 matters twice over for ${below.map(p=>p.name).join(', ')}</b> — it is where a Harmony assistant's sync rate jumps from 75% to 100%. Flagged in the table below.<br><br>`;
+  const missing = [...map.keys()].filter(n=>!peakGirls.some(pg=>pg.name===n));
+  if(missing.length) return `<b>Tip:</b> add your Harmony assistants above by name (${missing.slice(0,3).join(', ')}${missing.length>3?'…':''}) and PEAK 80 will be costed for them too.<br><br>`;
+  return '';
+}
+
+function renderPeak(){
+  saveState();
+  const groups = {};
+  peakGirls.forEach(g=>{ const key=g.genre+'|'+g.level+'|'+(g.name||''); groups[key]=(groups[key]||0)+1; });
+  document.getElementById('pkEntries').innerHTML = Object.entries(groups).map(([key,count])=>{
+    const [genre,level,name] = key.split('|');
+    const label = name ? `${name} · ${genre} @ lvl ${level}` : `${count}× ${genre} @ lvl ${level}`;
+    return `<span class="tb-chip" style="border-color:${GENRE_COLOR[genre]}55;">
+      ${label}
+      <button data-key="${key}" title="Remove">×</button></span>`;
+  }).join('');
+  document.getElementById('pkEntries').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const [genre,level,name] = btn.dataset.key.split('|');
+      peakGirls = peakGirls.filter(g=>!(g.genre===genre && String(g.level)===level && (g.name||'')===name));
+      renderPeak();
+    });
+  });
+
+  if(peakGirls.length===0){
+    document.getElementById('pkCurrentBuffs').innerHTML='';
+    document.getElementById('pkResults').innerHTML = emptyState('Add your maxed girls above', 'Then you\'ll see your current buffs and an upgrade plan.', 'tick');
+    return;
+  }
+
+  const buffs = computeBuffs(peakGirls);
+  document.getElementById('pkCurrentBuffs').innerHTML = `
+    <div class="skill-list" style="padding-top:12px;">
+      <div class="skill-list-title">Your current PEAK buffs (${peakGirls.length} maxed girls)</div>
+      ${PEAK_GENRES.map(g=>`<div class="skill-chip"><span style="color:${GENRE_COLOR[g]};">${g}</span><span>${buffs[g].sing.toFixed(1)}% Sing · ${buffs[g].dance.toFixed(1)}% Dance</span></div>`).join('')}
+    </div>`;
+
+  // Only ask which genres to strengthen when there is an actual choice — if
+  // every girl entered is one genre, that is obviously the target.
+  const entryGenres = [...new Set(peakGirls.map(g=>g.genre))];
+  const pkQ = document.getElementById('pkTargetQ');
+  if(entryGenres.length <= 1){
+    if(pkQ) pkQ.style.display = 'none';
+    if(entryGenres.length === 1) pkTargets = new Set(entryGenres);
+  } else if(pkQ){ pkQ.style.display = 'block'; }
+
+  if(pkTargets.size===0){
+    document.getElementById('pkResults').innerHTML = emptyState('Pick at least one genre', 'The plan is built around the genres you want to strengthen.', 'list');
+    return;
+  }
+
+  const budget = parseInt(document.getElementById('pkBudget').value,10);
+  const plan = planPeak(peakGirls, pkTargets, budget);
+  if(plan.steps.length===0){
+    document.getElementById('pkResults').innerHTML = emptyState('Nothing fits that budget', 'The cheapest next milestone costs more than what you entered.', 'warn');
+    return;
+  }
+
+  const after = computeBuffs(plan.finalGirls);
+  const targetList = [...pkTargets];
+  const rows = plan.steps.map((s,i)=>{
+    const who = s.name ? `<b>${s.name}</b>` : `any <b>${s.genre}</b> girl`;
+    const gain = s.sync
+      ? `<b style="color:var(--gold);">Sync 75% → 100%</b> <span style="color:var(--text-faint);">(Harmony, assists ${s.assists})</span>`
+      : `+${s.gain}% ${s.stat==='sing'?'Sing':'Dance'} <span style="color:var(--text-faint);">(${s.scope==='all'?'all':'genre'})</span>`;
+    return `
+    <tr${s.sync?' style="background:rgba(245,197,24,0.06);"':''}>
+      <td>${i+1}</td>
+      <td><span class="genre-dot" style="background:${GENRE_COLOR[s.genre]};"></span>Bring ${who} from level <b>${s.from}</b> → <b>${s.to}</b></td>
+      <td>${s.cost.toLocaleString()}</td>
+      <td>${gain}</td>
+      <td>${s.cumulative.toLocaleString()}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('pkResults').innerHTML = `
+    <div class="reco">
+      <div class="reco-eyebrow">Recommended plan</div>
+      <div class="reco-main">${plan.steps.length} upgrades · ${plan.spent.toLocaleString()} photos</div>
+      <div class="reco-body">
+        ${harmonyPeakAdvice()}
+        Ordered by buff-per-photo, best value first. ${budget>0 ? `Fits your ${budget.toLocaleString()}-photo budget.` : 'No budget limit set — this is the full efficient path.'}
+        Levels 5→70 are the sweet spot at roughly 1% per 1,000 photos; levels 100 and 150 are the worst value in the game, which is why the plan pushes many girls to 70 before taking anyone deeper.
+      </div>
+    </div>
+    <div class="table-scroll" style="margin-top:16px;">
+      <table>
+        <thead><tr><th>#</th><th>What to do</th><th>Photos</th><th>Gain</th><th>Running total</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div class="skill-list" style="margin-top:20px;padding-top:14px;">
+      <div class="skill-list-title">Result for your target genre${targetList.length>1?'s':''}</div>
+      ${targetList.map(g=>`<div class="skill-chip">
+        <span style="color:${GENRE_COLOR[g]};">${g}</span>
+        <span>${buffs[g].sing.toFixed(1)}% → <b>${after[g].sing.toFixed(1)}%</b> Sing · ${buffs[g].dance.toFixed(1)}% → <b>${after[g].dance.toFixed(1)}%</b> Dance</span>
+      </div>`).join('')}
+    </div>`;
+}
+
+// Restore anything saved from a previous visit, then allow future saves.
+(function restoreSaved(){
+  const s = loadState();
+  if(s){
+    if(Array.isArray(s.unlocked)){
+      // The roster gets edited (girls renamed or removed), so drop anything
+      // saved under a name that no longer exists rather than silently
+      // carrying dead entries that make the pool look empty.
+      const live = new Set(GIRLS.map(g=>g.name));
+      const RENAMED = {Ella:'Isla', Vivienne:'Vivian', Noora:'Nora', Raith:'Ratih', Mio:'Rio'};
+      unlocked = new Set(s.unlocked.map(n=>RENAMED[n]||n).filter(n=>live.has(n)));
+    }
+    if(Array.isArray(s.peakGirls)) peakGirls = s.peakGirls;
+    if(Array.isArray(s.pkTargets)) pkTargets = new Set(s.pkTargets);
+    if(typeof s.rallyLeaderAnswer !== 'undefined') rallyLeaderAnswer = s.rallyLeaderAnswer;
+    if(typeof s.rallyGenre !== 'undefined') rallyGenre = s.rallyGenre;
+    if(typeof s.parkingWarsAnswer !== 'undefined') parkingWarsAnswer = s.parkingWarsAnswer;
+    if(typeof s.harmonyGenre !== 'undefined') harmonyGenre = s.harmonyGenre;
+    if(s.harmonyTeamId) harmonyTeamId = s.harmonyTeamId;
+    if(typeof s.harmonyGenre !== 'undefined') harmonyGenre = s.harmonyGenre;
+    const bud = document.getElementById('pkBudget');
+    if(bud && s.pkBudget) bud.value = s.pkBudget;
+    document.querySelectorAll('#pkTargetGenres button').forEach(b=>{
+      const gn = b.dataset.genre;
+      if(pkTargets.has(gn)){ b.style.borderColor = GENRE_COLOR[gn]; b.style.color = GENRE_COLOR[gn]; }
+    });
+  }
+  saveReady = true;
+})();
+
+['lvGo'].forEach(id=>{ const b=document.getElementById(id); if(b) b.addEventListener('click', renderLevelCalc); });
+['lvGirl','lvFrom','lvTo'].forEach(id=>{ const e=document.getElementById(id); if(e){ e.addEventListener('keydown',ev=>{ if(ev.key==='Enter'){ev.preventDefault(); renderLevelCalc();} }); e.addEventListener('change', renderLevelCalc);} });
+
+const clearBtnEl = document.getElementById('clearSavedBtn');
+if(clearBtnEl) clearBtnEl.addEventListener('click', ()=>{
+  clearState();
+  unlocked = new Set(); peakGirls = []; pkTargets = new Set();
+  rallyLeaderAnswer = null; rallyGenre = null; parkingWarsAnswer = null; harmonyGenre = null;
+  const bud = document.getElementById('pkBudget'); if(bud) bud.value='';
+  document.querySelectorAll('#pkTargetGenres button').forEach(b=>{ b.style.borderColor=''; b.style.color=''; });
+  renderChips(); renderTbTable(); renderTeamBuilder(); renderPeak(); renderHarmony();
+});
+
+// Each render is guarded: if one ever throws, it must not stop the others and
+// leave a tab looking empty.
+playOpening();
+[renderPeak, renderHarmony, renderLevelCalc, renderChips, renderTbTable, renderTeamBuilder,
+ renderPicker, renderAll, renderRoster, renderLeaderboard].forEach(fn=>{
+  try{ fn(); }catch(e){ console.error(fn.name+' failed at startup', e); }
+});
+</script>
+</body>
+</html>

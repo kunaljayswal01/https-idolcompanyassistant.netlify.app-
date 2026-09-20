@@ -1,1 +1,1 @@
-# https-idolcompanyassistant.netlify.app-
+# https-idolcompanyassistant

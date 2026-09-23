@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Submit a battle report</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0910; --bg-panel:#15131d; --bg-panel-2:#1b1826; --line:#2a2637;
+    --text:#f2eee6; --text-dim:#9c96ac; --text-faint:#6b6580;
+    --gold:#f5c518; --edm:#2bd9c9; --pop:#ff4fa3; --rnb:#9b6bd9;
+    --good:#4ade80; --bad:#f87171; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;
+    line-height:1.55;padding:calc(22px + env(safe-area-inset-top,0px)) 16px
+                          calc(60px + env(safe-area-inset-bottom,0px));
+  }
+  body::after{
+    content:'';position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.055'/%3E%3C/svg%3E");
+  }
+  .wrap{max-width:660px;margin:0 auto;position:relative;z-index:2;}
+
+  header{position:relative;overflow:hidden;padding:24px 20px 20px;border-radius:var(--radius);margin-bottom:22px;}
+  header::after{
+    content:'';position:absolute;inset:-45%;pointer-events:none;
+    background:radial-gradient(circle at 25% 30%, var(--edm) 0%, transparent 55%),
+               radial-gradient(circle at 74% 64%, var(--rnb) 0%, transparent 58%);
+    opacity:.14;filter:blur(52px);animation:drift 26s ease-in-out infinite alternate;
+  }
+  header>*{position:relative;z-index:1;}
+  @keyframes drift{0%{transform:translate(0,0) scale(1);}50%{transform:translate(5%,-4%) scale(1.12);}
+                   100%{transform:translate(-4%,5%) scale(1.05);}}
+  h1{font-family:'Bebas Neue',sans-serif;font-size:36px;margin:0 0 2px;letter-spacing:.01em;}
+  .sub{color:var(--text-dim);font-size:14px;margin:0;max-width:52ch;}
+  .count{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--gold);margin-top:10px;}
+
+  .card{
+    background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px 18px;margin-bottom:14px;box-shadow:0 14px 26px -18px rgba(0,0,0,.95);
+  }
+  .card h2{
+    font-family:'Bebas Neue',sans-serif;font-size:21px;margin:0 0 3px;letter-spacing:.01em;
+  }
+  .card .hint{color:var(--text-faint);font-size:12.5px;margin:0 0 14px;}
+
+  .seg{display:flex;flex-wrap:wrap;gap:7px;}
+  .seg button{
+    background:none;border:1px solid var(--line);color:var(--text-dim);
+    font-family:'Inter',sans-serif;font-size:13px;padding:8px 14px;border-radius:99px;cursor:pointer;
+    transition:border-color .16s,color .16s,background .16s;
+  }
+  .seg button:hover{border-color:var(--text-faint);}
+  .seg button.on{border-color:var(--gold);color:var(--gold);background:rgba(245,197,24,.07);}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;}
+  @media(max-width:520px){.grid{grid-template-columns:1fr;}}
+  .f{display:flex;flex-direction:column;gap:4px;}
+  .f label{font-size:12px;color:var(--text-dim);}
+  .f label .u{color:var(--text-faint);font-size:10.5px;}
+  .f input{
+    background:var(--bg-panel-2);border:1.5px solid var(--line);color:var(--text);
+    padding:10px 12px;border-radius:9px;font-family:'IBM Plex Mono',monospace;font-size:14px;
+    outline:none;transition:border-color .16s;width:100%;
+  }
+  .f input:focus{border-color:var(--gold);}
+  .f input.bad{border-color:var(--bad);}
+  .f .note{font-size:11px;color:var(--text-faint);min-height:14px;}
+  .f .note.ok{color:var(--good);}
+  .f .note.warn{color:var(--bad);}
+
+  .sidehead{
+    display:flex;align-items:baseline;gap:8px;margin-bottom:10px;
+  }
+  .sidehead b{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:.02em;}
+  .sidehead span{font-size:12px;color:var(--text-faint);}
+
+  .submit{
+    width:100%;background:var(--gold);border:none;color:#171208;
+    font-family:'Inter',sans-serif;font-weight:600;font-size:15px;
+    padding:14px;border-radius:11px;cursor:pointer;margin-top:4px;
+    transition:filter .16s,opacity .16s;
+  }
+  .submit:hover{filter:brightness(1.07);}
+  .submit:disabled{opacity:.5;cursor:default;}
+  .msg{margin-top:12px;font-size:13.5px;min-height:20px;}
+  .msg.ok{color:var(--good);}
+  .msg.err{color:var(--bad);}
+
+  .why{margin-top:6px;}
+  .why summary{
+    cursor:pointer;list-style:none;font-family:'IBM Plex Mono',monospace;font-size:11px;
+    letter-spacing:.06em;text-transform:uppercase;color:var(--text-faint);
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .why summary::-webkit-details-marker{display:none;}
+  .why summary::before{content:'+';font-size:13px;}
+  .why[open] summary::before{content:'\2212';}
+  .why summary:hover{color:var(--gold);}
+  .why p{margin:8px 0 0;font-size:13px;color:var(--text-dim);
+         border-left:2px solid var(--line);padding-left:12px;}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Submit a battle report</h1>
+    <p class="sub">Every report sharpens the team advice on the main site. Copy the numbers straight off your battle report screen — it takes about a minute.</p>
+    <p class="count" id="count"></p>
+  </header>
+
+  <div class="card">
+    <h2>What kind of battle?</h2>
+    <p class="hint">The fight length differs a lot between modes, so this matters.</p>
+    <div class="seg" id="mode">
+      <button data-v="parking">Parking Wars</button>
+      <button data-v="p25">P25</button>
+      <button data-v="rally">Rally</button>
+      <button data-v="hq">HQ defence</button>
+      <button data-v="landmark">Landmark / tower</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Who won?</h2>
+    <p class="hint">A draw means both sides ran out of fans at the same moment.</p>
+    <div class="seg" id="outcome">
+      <button data-v="a">Your side</button>
+      <button data-v="b">The opponent</button>
+      <button data-v="draw">Stalemate</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sidehead"><b>Your side</b><span>left column of the report</span></div>
+    <div class="grid" id="sideA"></div>
+    <details class="why">
+      <summary>Why no "injured" box</summary>
+      <p>Injured is always exactly four times Loss, so it can be worked out rather than typed. If the number on your screen isn't four times the loss, something's been misread — worth double checking.</p>
+    </details>
+  </div>
+
+  <div class="card">
+    <div class="sidehead"><b>The opponent</b><span>right column of the report</span></div>
+    <div class="grid" id="sideB"></div>
+  </div>
+
+  <div class="card">
+    <div class="grid">
+      <div class="f">
+        <label>Your in-game name <span class="u">optional</span></label>
+        <input id="submitted_by" type="text" autocomplete="off" placeholder="so I can ask if a number looks odd">
+      </div>
+      <div class="f">
+        <label>Opponent's name <span class="u">optional</span></label>
+        <input id="b_name" type="text" autocomplete="off" placeholder="e.g. CORVETTE">
+      </div>
+    </div>
+    <button class="submit" id="go">Submit report</button>
+    <div class="msg" id="msg"></div>
+  </div>
+</div>
+
+<script>
+// The fields, in the order they appear on the battle report screen — so you can
+// work straight down your phone without hunting around.
+const FIELDS = [
+  {k:'fans',   label:'Fans',                unit:'the big number at the top'},
+  {k:'loss',   label:'Loss',                unit:'the red number'},
+  {k:'sing',   label:'Sing',                unit:''},
+  {k:'dance',  label:'Dance',               unit:''},
+  {k:'active', label:'Active Skill',        unit:'usually 9000'},
+  {k:'natk',   label:'Normal Attack Bonus', unit:'%'},
+  {k:'nred',   label:'Normal Attack Reduction', unit:'%'},
+  {k:'sb',     label:'Skill Bonus',         unit:'%'},
+  {k:'sred',   label:'Skill Reduction',     unit:'%'},
+];
+
+function buildSide(containerId, side){
+  const box = document.getElementById(containerId);
+  box.innerHTML = FIELDS.map(f=>`
+    <div class="f">
+      <label>${f.label} ${f.unit?`<span class="u">${f.unit}</span>`:''}</label>
+      <input id="${side}_${f.k}" type="text" inputmode="decimal" autocomplete="off" data-k="${f.k}" data-side="${side}">
+      <div class="note" id="note_${side}_${f.k}"></div>
+    </div>`).join('');
+}
+buildSide('sideA','a');
+buildSide('sideB','b');
+
+// Live feedback: show what the entered Loss implies, so a mistyped number is
+// caught while the person still has the screen in front of them.
+function wire(side){
+  const fans = document.getElementById(side+'_fans');
+  const loss = document.getElementById(side+'_loss');
+  const note = document.getElementById('note_'+side+'_loss');
+  function check(){
+    const F = num(fans.value), L = num(loss.value);
+    if(!F || !L){ note.textContent=''; note.className='note'; return; }
+    const taken = L*5, pct = taken/F*100;
+    if(pct > 102){
+      note.textContent = 'That is more damage than their whole fan pool — check it.';
+      note.className = 'note warn'; loss.classList.add('bad');
+    } else {
+      loss.classList.remove('bad');
+      note.textContent = 'implies ' + Math.round(taken).toLocaleString() +
+                         ' damage taken (' + pct.toFixed(0) + '% of pool)';
+      note.className = 'note ok';
+    }
+  }
+  fans.addEventListener('input', check);
+  loss.addEventListener('input', check);
+}
+wire('a'); wire('b');
+
+function num(v){ return Number(String(v).replace(/[, %]/g,'')) || 0; }
+
+// segmented pickers
+let mode=null, outcome=null;
+function seg(id, set){
+  document.getElementById(id).querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.getElementById(id).querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on'); set(b.dataset.v);
+    });
+  });
+}
+seg('mode', v=>mode=v);
+seg('outcome', v=>outcome=v);
+
+// how many reports are in so far — a bit of social proof
+fetch('/api/count').then(r=>r.json()).then(d=>{
+  if(d && typeof d.total === 'number'){
+    document.getElementById('count').textContent =
+      d.total.toLocaleString() + ' reports collected so far';
+  }
+}).catch(()=>{});
+
+document.getElementById('go').addEventListener('click', async ()=>{
+  const msg = document.getElementById('msg');
+  const btn = document.getElementById('go');
+  msg.className='msg'; msg.textContent='';
+
+  if(!mode){ msg.className='msg err'; msg.textContent='Pick which kind of battle it was.'; return; }
+  if(!outcome){ msg.className='msg err'; msg.textContent='Pick who won.'; return; }
+
+  const body = { mode, outcome,
+    submitted_by: document.getElementById('submitted_by').value.trim(),
+    b_name: document.getElementById('b_name').value.trim() };
+
+  for(const side of ['a','b']){
+    for(const f of FIELDS){
+      const el = document.getElementById(side+'_'+f.k);
+      const v = num(el.value);
+      if(!v && f.k!=='nred' && f.k!=='sred'){
+        el.classList.add('bad');
+        msg.className='msg err';
+        msg.textContent = 'Missing: ' + f.label + ' for ' + (side==='a'?'your side':'the opponent');
+        el.scrollIntoView({behavior:'smooth', block:'center'});
+        return;
+      }
+      el.classList.remove('bad');
+      body[side+'_'+f.k] = v;
+    }
+  }
+
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try{
+    const r = await fetch('/api/report', {
+      method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    if(!d.ok){ throw new Error(d.error || 'Something went wrong.'); }
+    if(d.duplicate){
+      msg.className='msg ok';
+      msg.textContent = 'Already had this one — thanks anyway.';
+    } else {
+      msg.className='msg ok';
+      msg.textContent = 'Saved. That is ' + (d.total||'') + ' reports now — thank you.';
+      document.querySelectorAll('input[type=text]').forEach(i=>{ if(!i.id.includes('name')&&i.id!=='submitted_by') i.value=''; });
+      document.querySelectorAll('.note').forEach(n=>{n.textContent='';n.className='note';});
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+  }catch(e){
+    msg.className='msg err'; msg.textContent = e.message;
+  }
+  btn.disabled = false; btn.textContent = 'Submit report';
+});
+</script>
+</body>
+</html>

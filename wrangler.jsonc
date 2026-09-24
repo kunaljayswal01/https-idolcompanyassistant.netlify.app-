@@ -1,0 +1,30 @@
+{
+  // Cloudflare reads this file to know how to run your site.
+  // The only thing you may need to edit is "database_id" further down.
+
+  "name": "idol-assistant",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-01",
+
+  // The folder holding index.html and submit.html. The Worker serves these
+  // for any request that is not /api/something.
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+
+  // The battle report database. The binding name DB is what the code looks
+  // for — do not rename it. Paste your own database_id from the Cloudflare
+  // dashboard (D1 → idol-reports → it is shown at the top of the page).
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "idol-reports",
+      "database_id": "4a5235ae-060c-4177-a92b-9fd8d0e410a3"
+    }
+  ],
+
+  "observability": {
+    "enabled": true
+  }
+}

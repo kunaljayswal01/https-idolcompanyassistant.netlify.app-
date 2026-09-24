@@ -6,7 +6,7 @@
 
 const MODES    = ['parking', 'p25', 'rally', 'hq', 'landmark'];
 const OUTCOMES = ['a', 'b', 'draw'];
-const NUMS = ['fans', 'loss', 'sing', 'dance', 'active'];
+const NUMS = ['fans', 'loss', 'injured', 'sing', 'dance', 'active'];
 const PCTS = ['natk', 'nred', 'sb', 'sred'];
 
 const json = (obj, status = 200) =>
@@ -57,21 +57,40 @@ async function saveReport(request, env) {
     for (const f of PCTS) {
       let v = Number(body[`${side}_${f}`]);
       if (!isFinite(v) || v < 0) return bad(`Check the ${side.toUpperCase()} side's ${f} value.`);
-      if (v > 20) v = v / 100;          // accept 205 or 2.05
+      // The form asks for the number exactly as the game shows it, so 175 means
+      // 175% and 17 means 17%. Always divide by a hundred.
+      //
+      // An earlier version only converted values above 20, on the theory that a
+      // small number must already be a fraction. That was wrong: reductions are
+      // routinely 5% or 17%, and those were being stored as 500% and 1700%.
+      v = v / 100;
+      // Nothing in this game goes near 1000%, so a value that high is a typo —
+      // an extra digit, or someone entering 1.75 where 175 was wanted.
+      if (v > 10) return bad(`The ${side.toUpperCase()} side's ${f} looks too big — enter it as the game shows it, e.g. 175 for 175%.`);
       row[`${side}_${f}`] = v;
     }
   }
 
-  // Sanity checks against how the game actually behaves. Loss is always 20% of
-  // the damage taken, so damage taken is five times loss, and that can never
-  // exceed the fan pool.
+  // Sanity checks against how the game actually behaves. Damage taken is loss
+  // plus injured, and that can never exceed the fan pool.
+  //
+  // An earlier version derived injured as four times loss, on the basis that
+  // loss is always 20% of damage taken. That holds for parking and P25 but not
+  // for HQ defence, where the attacker loses 20% and the defender 10% — so the
+  // figure is now collected rather than assumed.
   for (const side of ['a', 'b']) {
-    if (row[`${side}_loss`] * 5 > row[`${side}_fans`] * 1.02) {
-      return bad(`The ${side.toUpperCase()} side's loss is too big for their fan pool — check the numbers.`);
+    const taken = row[`${side}_loss`] + row[`${side}_injured`];
+    if (taken > row[`${side}_fans`] * 1.02) {
+      return bad(`The ${side.toUpperCase()} side's loss and injured add up to more than their fan pool — check the numbers.`);
+    }
+    // Any side that lost fans must also have injured ones, so a zero here
+    // almost always means the box was skipped rather than genuinely zero.
+    if (row[`${side}_loss`] > 0 && row[`${side}_injured`] === 0) {
+      return bad(`The ${side.toUpperCase()} side has a loss but no injured — the injured figure is the yellow number, just below loss.`);
     }
   }
-  const aFull = row.a_loss * 5 >= row.a_fans * 0.98;
-  const bFull = row.b_loss * 5 >= row.b_fans * 0.98;
+  const aFull = (row.a_loss + row.a_injured) >= row.a_fans * 0.98;
+  const bFull = (row.b_loss + row.b_injured) >= row.b_fans * 0.98;
   if (row.outcome === 'a' && !bFull)   return bad('You marked A as the winner, but B was not fully depleted.');
   if (row.outcome === 'b' && !aFull)   return bad('You marked B as the winner, but A was not fully depleted.');
   if (row.outcome === 'draw' && !(aFull && bFull))

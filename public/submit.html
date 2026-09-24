@@ -139,8 +139,8 @@
     <div class="sidehead"><b>Your side</b><span>left column of the report</span></div>
     <div class="grid" id="sideA"></div>
     <details class="why">
-      <summary>Why no "injured" box</summary>
-      <p>Injured is always exactly four times Loss, so it can be worked out rather than typed. If the number on your screen isn't four times the loss, something's been misread — worth double checking.</p>
+      <summary>Why both Loss and Injured</summary>
+      <p>Loss is the permanent one, Injured come back. The split between them isn't the same in every mode — HQ defence treats the attacker and defender differently — so both are worth recording rather than working one out from the other.</p>
     </details>
   </div>
 
@@ -169,8 +169,9 @@
 // The fields, in the order they appear on the battle report screen — so you can
 // work straight down your phone without hunting around.
 const FIELDS = [
-  {k:'fans',   label:'Fans',                unit:'the big number at the top'},
-  {k:'loss',   label:'Loss',                unit:'the red number'},
+  {k:'fans',    label:'Fans',               unit:'the big number at the top'},
+  {k:'loss',    label:'Loss',               unit:'the red number'},
+  {k:'injured', label:'Injured',            unit:'the yellow number'},
   {k:'sing',   label:'Sing',                unit:''},
   {k:'dance',  label:'Dance',               unit:''},
   {k:'active', label:'Active Skill',        unit:'usually 9000'},
@@ -197,23 +198,23 @@ buildSide('sideB','b');
 function wire(side){
   const fans = document.getElementById(side+'_fans');
   const loss = document.getElementById(side+'_loss');
-  const note = document.getElementById('note_'+side+'_loss');
+  const inj  = document.getElementById(side+'_injured');
+  const note = document.getElementById('note_'+side+'_injured');
   function check(){
-    const F = num(fans.value), L = num(loss.value);
-    if(!F || !L){ note.textContent=''; note.className='note'; return; }
-    const taken = L*5, pct = taken/F*100;
+    const F = num(fans.value), L = num(loss.value), I = num(inj.value);
+    if(!F || !L || !I){ note.textContent=''; note.className='note'; return; }
+    const taken = L + I, pct = taken/F*100;
     if(pct > 102){
-      note.textContent = 'That is more damage than their whole fan pool — check it.';
-      note.className = 'note warn'; loss.classList.add('bad');
+      note.textContent = 'Loss and injured add up to more than the fan pool — check them.';
+      note.className = 'note warn'; inj.classList.add('bad');
     } else {
-      loss.classList.remove('bad');
-      note.textContent = 'implies ' + Math.round(taken).toLocaleString() +
+      inj.classList.remove('bad');
+      note.textContent = Math.round(taken).toLocaleString() +
                          ' damage taken (' + pct.toFixed(0) + '% of pool)';
       note.className = 'note ok';
     }
   }
-  fans.addEventListener('input', check);
-  loss.addEventListener('input', check);
+  [fans, loss, inj].forEach(el=>el.addEventListener('input', check));
 }
 wire('a'); wire('b');
 

@@ -2,7 +2,7 @@
   // Cloudflare reads this file to know how to run your site.
   // The only thing you may need to edit is "database_id" further down.
 
-  "name": "idol-assistant",
+  "name": "topbugsofzendaya",
   "main": "src/index.js",
   "compatibility_date": "2026-09-01",
 
